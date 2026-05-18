@@ -2577,6 +2577,14 @@ async def websocket_endpoint(websocket: WebSocket):
             pass
 
 
+@app.get("/favicon.ico")
+async def favicon():
+    svg_path = BASE_DIR / "static" / "favicon.svg"
+    if svg_path.exists():
+        return FileResponse(svg_path, media_type="image/svg+xml")
+    return FileResponse(BASE_DIR / "static" / "favicon.svg", media_type="image/svg+xml")
+
+
 @app.get("/")
 async def get():
     html_file = BASE_DIR / "static" / "index.html"

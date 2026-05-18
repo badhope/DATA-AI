@@ -1936,7 +1936,7 @@
         var skillQuickBtn = $('#skill-quick-btn');
         if (skillQuickBtn) {
             skillQuickBtn.addEventListener('click', function () {
-                openDrawer('skill-drawer', 'skill-drawer-overlay');
+                openDrawer('skill-drawer', 'skill-drawer-backdrop');
                 loadSkills();
             });
         }
@@ -2178,15 +2178,15 @@
         var skillDrawerClose = $('#skill-drawer-close');
         if (skillDrawerClose) {
             skillDrawerClose.addEventListener('click', function() {
-                closeDrawer('skill-drawer', 'skill-drawer-overlay');
+                closeDrawer('skill-drawer', 'skill-drawer-backdrop');
             });
         }
 
         // Skill drawer overlay click to close
-        var skillDrawerOverlay = $('#skill-drawer-overlay');
+        var skillDrawerOverlay = $('#skill-drawer-backdrop');
         if (skillDrawerOverlay) {
             skillDrawerOverlay.addEventListener('click', function() {
-                closeDrawer('skill-drawer', 'skill-drawer-overlay');
+                closeDrawer('skill-drawer', 'skill-drawer-backdrop');
             });
         }
 
@@ -2353,12 +2353,17 @@
 
     function initSidebar() {
         var toggleBtn = $('#sidebar-toggle-btn');
-        var closeBtn = $('#sidebar-close-btn');
         var overlay = $('#sidebar-overlay');
         var newChatBtn = $('#new-chat-btn');
 
-        if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
-        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+        if (toggleBtn) toggleBtn.addEventListener('click', function () {
+            var sidebar = $('#sidebar');
+            if (sidebar && sidebar.classList.contains('open')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
         if (overlay) overlay.addEventListener('click', closeSidebar);
         if (newChatBtn) newChatBtn.addEventListener('click', function () {
             createConversation();
@@ -2426,12 +2431,12 @@
         var logsBtn = $('#sidebar-logs-btn');
         var settingsBtn = $('#sidebar-settings-btn');
 
-        if (kbBtn) kbBtn.addEventListener('click', function () { openDrawer('kb-drawer', 'kb-drawer-overlay'); loadKnowledgeBases(); closeSidebar(); });
-        if (skillBtn) skillBtn.addEventListener('click', function () { openDrawer('settings-drawer', 'settings-drawer-overlay'); closeSidebar(); setTimeout(function() { switchTab('tab-skills'); }, 300); });
-        if (mcpBtn) mcpBtn.addEventListener('click', function () { openDrawer('settings-drawer', 'settings-drawer-overlay'); closeSidebar(); setTimeout(function() { switchTab('tab-mcp'); }, 300); });
+        if (kbBtn) kbBtn.addEventListener('click', function () { openDrawer('kb-drawer', 'kb-drawer-backdrop'); loadKnowledgeBases(); closeSidebar(); });
+        if (skillBtn) skillBtn.addEventListener('click', function () { openDrawer('settings-drawer', 'settings-drawer-backdrop'); closeSidebar(); setTimeout(function() { switchTab('tab-skills'); }, 300); });
+        if (mcpBtn) mcpBtn.addEventListener('click', function () { openDrawer('settings-drawer', 'settings-drawer-backdrop'); closeSidebar(); setTimeout(function() { switchTab('tab-mcp'); }, 300); });
         if (artifactsBtn) artifactsBtn.addEventListener('click', function () { var panel = $('#artifacts-panel'); var toggle = $('#artifacts-toggle-btn'); if (panel) panel.classList.toggle('open'); if (toggle) toggle.classList.toggle('active'); closeSidebar(); });
         if (logsBtn) logsBtn.addEventListener('click', function () { var panel = $('#logs-panel'); if (panel) panel.classList.add('open'); closeSidebar(); });
-        if (settingsBtn) settingsBtn.addEventListener('click', function () { openDrawer('settings-drawer', 'settings-drawer-overlay'); closeSidebar(); });
+        if (settingsBtn) settingsBtn.addEventListener('click', function () { openDrawer('settings-drawer', 'settings-drawer-backdrop'); closeSidebar(); });
     }
 
     // ==================== Log System ====================
@@ -4088,28 +4093,28 @@
         var drawer = $('#' + drawerId);
         var overlay = $('#' + overlayId);
         if (drawer) drawer.classList.add('open');
-        if (overlay) overlay.classList.add('show');
+        if (overlay) overlay.classList.add('visible');
     }
 
     function closeDrawer(drawerId, overlayId) {
         var drawer = $('#' + drawerId);
         var overlay = $('#' + overlayId);
         if (drawer) drawer.classList.remove('open');
-        if (overlay) overlay.classList.remove('show');
+        if (overlay) overlay.classList.remove('visible');
     }
 
     function initDrawers() {
         // Settings drawer
         var settingsClose = $('#settings-drawer-close');
-        var settingsOverlay = $('#settings-drawer-overlay');
-        if (settingsClose) settingsClose.addEventListener('click', function () { closeDrawer('settings-drawer', 'settings-drawer-overlay'); });
-        if (settingsOverlay) settingsOverlay.addEventListener('click', function () { closeDrawer('settings-drawer', 'settings-drawer-overlay'); });
+        var settingsOverlay = $('#settings-drawer-backdrop');
+        if (settingsClose) settingsClose.addEventListener('click', function () { closeDrawer('settings-drawer', 'settings-drawer-backdrop'); });
+        if (settingsOverlay) settingsOverlay.addEventListener('click', function () { closeDrawer('settings-drawer', 'settings-drawer-backdrop'); });
 
         // KB drawer
         var kbClose = $('#kb-drawer-close');
-        var kbOverlay = $('#kb-drawer-overlay');
-        if (kbClose) kbClose.addEventListener('click', function () { closeDrawer('kb-drawer', 'kb-drawer-overlay'); });
-        if (kbOverlay) kbOverlay.addEventListener('click', function () { closeDrawer('kb-drawer', 'kb-drawer-overlay'); });
+        var kbOverlay = $('#kb-drawer-backdrop');
+        if (kbClose) kbClose.addEventListener('click', function () { closeDrawer('kb-drawer', 'kb-drawer-backdrop'); });
+        if (kbOverlay) kbOverlay.addEventListener('click', function () { closeDrawer('kb-drawer', 'kb-drawer-backdrop'); });
 
         // Help modal
         var helpClose = $('#help-modal-close');
@@ -5150,7 +5155,7 @@
 
         httpPost('/api/settings', settings).then(function (data) {
             appSettings = settings;
-            closeDrawer('settings-drawer', 'settings-drawer-overlay');
+            closeDrawer('settings-drawer', 'settings-drawer-backdrop');
             showToast('设置已保存', 'success');
             updateModelDisplay(settings.llm.model);
         }).catch(function (e) {
@@ -5285,7 +5290,7 @@
             inputBox.focus();
             autoResizeTextarea();
         }
-        closeDrawer('skill-drawer', 'skill-drawer-overlay');
+        closeDrawer('skill-drawer', 'skill-drawer-backdrop');
     }
 
     function createSkill() {
@@ -5563,10 +5568,10 @@
                     stopGeneration();
                     return;
                 }
-                closeDrawer('settings-drawer', 'settings-drawer-overlay');
-                closeDrawer('kb-drawer', 'kb-drawer-overlay');
-                closeDrawer('skill-drawer', 'skill-drawer-overlay');
-                closeDrawer('mcp-drawer', 'mcp-drawer-overlay');
+                closeDrawer('settings-drawer', 'settings-drawer-backdrop');
+                closeDrawer('kb-drawer', 'kb-drawer-backdrop');
+                closeDrawer('skill-drawer', 'skill-drawer-backdrop');
+                closeDrawer('mcp-drawer', 'mcp-drawer-backdrop');
                 var helpModal = $('#help-modal');
                 if (helpModal) helpModal.classList.remove('show');
                 var shortcutsModal = $('#shortcuts-modal');
@@ -7300,7 +7305,7 @@
                     currentConvId = convId;
                     renderConversationList();
                     renderChatArea();
-                    closeDrawer('settings-drawer', 'settings-drawer-overlay');
+                    closeDrawer('settings-drawer', 'settings-drawer-backdrop');
                 }
             });
         });

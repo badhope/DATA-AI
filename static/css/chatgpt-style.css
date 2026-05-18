@@ -1,0 +1,401 @@
+/* ============================================
+   ChatGPT 风格 CSS 变量与基础样式体系
+   ============================================ */
+
+/* --- 1. CSS 变量（暗色主题默认） --- */
+:root {
+    --bg-primary: #212121;
+    --bg-secondary: #2f2f2f;
+    --bg-tertiary: #171717;
+    --bg-input: #303030;
+    --bg-hover: #2a2a2a;
+    --bg-code: #0d0d0d;
+    --text-primary: #ECECF1;
+    --text-secondary: #B4B4B4;
+    --text-tertiary: #8E8E8E;
+    --accent-color: #10a37f;
+    --accent-hover: #0d8c6d;
+    --border-color: #444444;
+    --border-light: #333333;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --success-color: #22c55e;
+    --sidebar-width: 260px;
+    --chat-max-width: 768px;
+    --input-max-width: 768px;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: 'SF Mono', 'Fira Code', 'Fira Mono', Menlo, Consolas, monospace;
+    --transition: 0.2s ease;
+    --accent-primary: #8ab4f8;
+    --accent-secondary: #a8c7fa;
+    --accent-gradient: linear-gradient(135deg, #8ab4f8, #a8c7fa);
+    --color-error: #f87171;
+    --color-error-bg: rgba(248, 113, 113, 0.1);
+    --color-success: #34d399;
+    --color-success-bg: rgba(52, 211, 153, 0.1);
+    --color-warning: #fbbf24;
+    --color-warning-bg: rgba(251, 191, 36, 0.1);
+    --color-info: #60a5fa;
+    --color-info-bg: rgba(96, 165, 250, 0.1);
+    --text-muted: #80868b;
+    --border-color-light: #4a4d50;
+    --sidebar-hover: #2d2e31;
+    --radius-full: 9999px;
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.2s ease;
+    --transition-slow: 0.3s ease;
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+}
+
+/* --- 2. 亮色主题 --- */
+[data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f7f7f8;
+    --bg-tertiary: #ffffff;
+    --bg-input: #f4f4f4;
+    --bg-hover: #ececf1;
+    --bg-code: #f7f7f8;
+    --text-primary: #2d2d2d;
+    --text-secondary: #6e6e80;
+    --text-tertiary: #9e9eae;
+    --accent-color: #10a37f;
+    --accent-hover: #0d8c6d;
+    --border-color: #e5e5e5;
+    --border-light: #e0e0e0;
+    --accent-primary: #10a37f;
+    --accent-secondary: #0d8c6d;
+    --accent-gradient: linear-gradient(135deg, #10a37f, #0d8c6d);
+    --color-error: #ef4444;
+    --color-error-bg: rgba(239, 68, 68, 0.1);
+    --color-success: #22c55e;
+    --color-success-bg: rgba(34, 197, 94, 0.1);
+    --color-warning: #f59e0b;
+    --color-warning-bg: rgba(245, 158, 11, 0.1);
+    --color-info: #60a5fa;
+    --color-info-bg: rgba(96, 165, 250, 0.1);
+    --text-muted: #8e8ea0;
+    --border-color-light: #e0e0e0;
+    --sidebar-hover: #ececf1;
+    --radius-full: 9999px;
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.2s ease;
+    --transition-slow: 0.3s ease;
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+}
+
+/* --- 3. 全局重置 --- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-sans);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    scroll-behavior: smooth;
+}
+
+/* --- 4. 主布局 --- */
+.app-wrapper {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.main-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    position: relative;
+}
+
+/* --- 5. 侧边栏基础样式 --- */
+.sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-light);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.25s ease;
+    overflow: hidden;
+}
+
+.sidebar.collapsed {
+    width: 0;
+    overflow: hidden;
+    padding: 0;
+}
+
+/* --- 6. 顶部导航条 --- */
+.top-bar {
+    height: 52px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border-light);
+}
+
+/* --- 7. 对话区域 --- */
+.chat-main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 0;
+}
+
+/* --- 8. 消息容器 --- */
+.messages-container {
+    max-width: var(--chat-max-width);
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* --- 9. 输入区 --- */
+.input-area {
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(to top, var(--bg-primary) 0%, var(--bg-primary) 60%, transparent 100%);
+    padding: 16px 16px 24px;
+}
+
+/* --- 10. 输入框容器与输入框 --- */
+.input-container {
+    max-width: var(--input-max-width);
+    margin: 0 auto;
+    position: relative;
+}
+
+#input-box {
+    width: 100%;
+    border-radius: var(--radius-xl);
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    padding: 12px 48px 12px 16px;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+#input-box:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 1px var(--accent-color);
+}
+
+/* --- 11. 发送按钮 --- */
+#send-btn {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition);
+}
+
+#send-btn:hover {
+    background: var(--accent-hover);
+}
+
+#send-btn::after {
+    content: '';
+    display: block;
+    width: 0;
+    height: 0;
+    border-left: 6px solid #ffffff;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    margin-left: 1px;
+}
+
+/* --- 12. 抽屉面板 --- */
+.drawer-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 480px;
+    height: 100vh;
+    background: var(--bg-primary);
+    border-left: 1px solid var(--border-color);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 200;
+    overflow-y: auto;
+}
+
+.drawer-panel.open {
+    transform: translateX(0);
+}
+
+/* --- 13. 抽屉遮罩 --- */
+.drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 199;
+    display: none;
+}
+
+.drawer-backdrop.visible {
+    display: block;
+}
+
+/* --- 14. 消息气泡 --- */
+.message {
+    padding: 24px;
+}
+
+.message.user {
+    background: var(--bg-secondary);
+}
+
+.message.assistant {
+    background: var(--bg-primary);
+}
+
+.message-content {
+    max-width: var(--chat-max-width);
+    margin: 0 auto;
+}
+
+/* --- 15. 模态框 --- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+}
+
+.modal {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* --- 16. Toast --- */
+.toast-container {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    z-index: 400;
+}
+
+/* --- 17. 滚动条样式 --- */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-tertiary);
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+
+/* --- 18. 欢迎页 --- */
+.welcome-screen {
+    text-align: center;
+    padding: 60px 20px;
+    max-width: var(--chat-max-width);
+    margin: 0 auto;
+}
+
+/* --- 19. 动画 --- */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.4;
+    }
+}
+
+/* --- 20. 响应式 --- */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        z-index: 150;
+        height: 100vh;
+    }
+
+    .sidebar:not(.open) {
+        width: 0;
+    }
+
+    .messages-container {
+        padding: 0 12px;
+    }
+}
