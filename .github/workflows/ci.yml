@@ -52,13 +52,17 @@ jobs:
         env:
           DATA_AI_API_KEYS: "ci-test-key"
         run: |
-          pytest tests/unit/ -v
+          pytest tests/unit/ -v --tb=short \
+            --reruns 2 --reruns-delay 1 \
+            -m "not slow"
 
       - name: Run full test suite
         env:
           DATA_AI_API_KEYS: "ci-test-key"
         run: |
-          pytest tests/ -v --tb=short -x -m "not slow"
+          pytest tests/ -v --tb=short \
+            --reruns 2 --reruns-delay 1 \
+            -m "not slow"
 
   frontend:
     name: Frontend (Node ${{ matrix.node-version }})

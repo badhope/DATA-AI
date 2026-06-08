@@ -121,3 +121,4 @@ pytest.mark.unit = pytest.mark.unit
 pytest.mark.integration = pytest.mark.integration
 pytest.mark.e2e = pytest.mark.e2e
 pytest.mark.slow = pytest.mark.slow
+pytest.mark.flaky = pytest.mark.flaky
