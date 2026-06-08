@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 LABEL maintainer="badhope"
 LABEL description="DATA-AI: Production-grade AI Agent Framework"
