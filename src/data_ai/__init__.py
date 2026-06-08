@@ -1,7 +1,7 @@
 """
-DATA-AI Framework
+DATA-AI
 
-Production-grade AI Agent Framework with multi-model support, RAG, memory, and tool calling.
+Multi-LLM agent runtime with RAG, memory and 30+ tools.
 """
 
 from .sdk import (

@@ -80,7 +80,7 @@ def _err(e: Exception) -> None:
 
 app = typer.Typer(
     name="data-ai",
-    help="DATA-AI: Production-grade AI Agent Framework",
+    help="DATA-AI: multi-LLM agent runtime with RAG, memory and 30+ tools",
     add_completion=False,
     no_args_is_help=True,
     rich_markup_mode="rich",
