@@ -199,9 +199,7 @@ class ContextStore:
     ) -> list[ContextMeta]:
         """列出所有上下文(可按命名空间/标签过滤)"""
         results: list[ContextMeta] = []
-        ns_dirs = (
-            [self.base_dir / _safe(namespace)] if namespace else list(self.base_dir.iterdir())
-        )
+        ns_dirs = [self.base_dir / _safe(namespace)] if namespace else list(self.base_dir.iterdir())
 
         for ns_dir in ns_dirs:
             if not ns_dir.is_dir():

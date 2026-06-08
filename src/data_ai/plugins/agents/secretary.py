@@ -59,10 +59,17 @@ SYSTEM_PROMPT = """你是用户的私人秘书,叫「{assistant_name}」,已经�
 # ─── 工具集 ────────────────────────────────────────────
 
 TOOLS: list[str] = [
-    "calendar_add", "calendar_list", "calendar_update", "calendar_delete",
-    "email_search", "email_draft",
-    "file_read", "file_search",
-    "context_store_save", "context_store_load", "context_store_list",
+    "calendar_add",
+    "calendar_list",
+    "calendar_update",
+    "calendar_delete",
+    "email_search",
+    "email_draft",
+    "file_read",
+    "file_search",
+    "context_store_save",
+    "context_store_load",
+    "context_store_list",
     "web_search",
     "reminder_set",
 ]
@@ -72,10 +79,10 @@ TOOLS: list[str] = [
 DEFAULT_NAMESPACE = "secretary"
 DEFAULT_TAGS = ["preset", "secretary"]
 DEFAULT_CONTEXT_NAMES = [
-    "owner_profile",        # 主人档案(姓名/单位/家人/重要日期)
-    "contacts",             # 常用联系人
-    "long_term_goals",      # 长期目标
-    "current_projects",     # 当前项目
+    "owner_profile",  # 主人档案(姓名/单位/家人/重要日期)
+    "contacts",  # 常用联系人
+    "long_term_goals",  # 长期目标
+    "current_projects",  # 当前项目
 ]
 
 # ─── 预设配置 ──────────────────────────────────────────
@@ -90,14 +97,14 @@ PRESET: dict[str, Any] = {
     "default_tags": DEFAULT_TAGS,
     "default_context_names": DEFAULT_CONTEXT_NAMES,
     "max_iterations": 8,
-    "temperature": 0.5,        # 秘书可以稍微灵活
-    "reflection": False,       # 不需要反思,响应要快
-    "memory_lifetime": "forever",   # 秘书记忆要永久
+    "temperature": 0.5,  # 秘书可以稍微灵活
+    "reflection": False,  # 不需要反思,响应要快
+    "memory_lifetime": "forever",  # 秘书记忆要永久
     "user_facing_traits": [
         "proactive_reminder",  # 主动提醒
         "confirm_before_act",  # 行动前确认
-        "polite_formal",       # 礼貌但正式
-        "no_idle_chat",        # 不主动闲聊
+        "polite_formal",  # 礼貌但正式
+        "no_idle_chat",  # 不主动闲聊
     ],
 }
 
@@ -130,9 +137,8 @@ def build_agent(
     if context_store and owner_profile:
         # 持久化主人档案
         import json
-        profile_md = "# 主人档案\n\n" + json.dumps(
-            owner_profile, ensure_ascii=False, indent=2
-        )
+
+        profile_md = "# 主人档案\n\n" + json.dumps(owner_profile, ensure_ascii=False, indent=2)
         context_store.save(
             "owner_profile",
             profile_md,

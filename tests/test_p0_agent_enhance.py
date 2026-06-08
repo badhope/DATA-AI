@@ -84,6 +84,7 @@ def _run_offline_checks() -> None:
     check("to_dict JSON 序列化 OK", json.dumps(d, ensure_ascii=False) is not None)
 
     print("\n[3] _parse_reflection_json 鲁棒性")
+
     class _Stub(BaseAgent):
         def __init__(self):
             super().__init__()
@@ -144,12 +145,14 @@ def test_backend_e2e_with_llm() -> None:
 
     assert backend_data.get("status") == "healthy", f"backend unhealthy: {backend_data}"
 
-    body = json.dumps({
-        "model": "qwen-turbo",
-        "messages": [{"role": "user", "content": "用 python_execute 算 7*8 等于几,只调用工具不心算"}],
-        "enable_tools": True,
-        "max_tokens": 200,
-    }).encode()
+    body = json.dumps(
+        {
+            "model": "qwen-turbo",
+            "messages": [{"role": "user", "content": "用 python_execute 算 7*8 等于几,只调用工具不心算"}],
+            "enable_tools": True,
+            "max_tokens": 200,
+        }
+    ).encode()
     req = urllib.request.Request(
         "http://localhost:8000/v1/chat/completions",
         data=body,
@@ -167,15 +170,15 @@ def test_backend_e2e_with_llm() -> None:
             pytest.fail("LLM 没调工具")
 
     # Self-reflection
-    body2 = json.dumps({
-        "model": "qwen-turbo",
-        "messages": [
-            {"role": "user", "content": "你是什么模型?只回答模型名和版本,不确定就说不知道"}
-        ],
-        "enable_tools": True,
-        "enable_reflection": True,
-        "max_tokens": 200,
-    }).encode()
+    body2 = json.dumps(
+        {
+            "model": "qwen-turbo",
+            "messages": [{"role": "user", "content": "你是什么模型?只回答模型名和版本,不确定就说不知道"}],
+            "enable_tools": True,
+            "enable_reflection": True,
+            "max_tokens": 200,
+        }
+    ).encode()
     req2 = urllib.request.Request(
         "http://localhost:8000/v1/chat/completions",
         data=body2,

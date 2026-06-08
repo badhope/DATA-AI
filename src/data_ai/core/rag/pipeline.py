@@ -212,7 +212,6 @@ class InMemoryVectorStore(VectorStore):
         await asyncio.to_thread(self.add, documents, embeddings)
 
     def search(self, query_embedding: list[float], top_k: int = 5) -> list[tuple[Document, float]]:
-
         scores = []
         for i, emb in enumerate(self._embeddings):
             score = self._cosine_similarity(query_embedding, emb)

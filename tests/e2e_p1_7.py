@@ -1,11 +1,4 @@
-
-import asyncio
-import os
-import sys
-
 import httpx
-
-
 
 
 def _check(name: str, ok: bool, detail: str = "") -> None:
@@ -120,7 +113,9 @@ async def test_multi_delegate(client: httpx.AsyncClient) -> None:
             _check("返回 3 个结果", len(results) == 3, f"count={len(results)}")
             for i, d in enumerate(results):
                 has_trace = isinstance(d, dict) and "trace_id" in d
-                _check(f"结果 [{i}] 含 trace_id", has_trace, d.get("trace_id", "")[:8] if isinstance(d, dict) else "N/A")
+                _check(
+                    f"结果 [{i}] 含 trace_id", has_trace, d.get("trace_id", "")[:8] if isinstance(d, dict) else "N/A"
+                )
                 is_dict = isinstance(d, dict)
                 _check(f"结果 [{i}] 是 dict (不抛)", is_dict, "N/A")
         except Exception as e:
@@ -287,24 +282,30 @@ async def main():
     return 0 if passed == total else 1
 
 
-
-
 # ── pytest 集成 (auto) ────────────────────────────────────
 import base64 as _b64
 import sys as _sys
+
 import pytest as _pytest
-_MODULE_BODY = _b64.b64decode('IiIiClAxLTcg56uv5Yiw56uv5rWL6K+VIOKAlCDkuLvliqjmo4Dmn6UgLyDoh6rliqjph43ov54gLyDlh4bnoa7miqXplJkgLyDlpJrlp5TmtL4KCua1i+ivleWcuuaZrzoKICAxLiAvaGVhbHRoIOa3seW6puajgOafpSDigJQg5ZCrIGNoZWNrcyAvIGZpeGVzIC8gdHJhY2VfaWQgLyB1cHRpbWUKICAyLiAvaGVhbHRoL2xpdmUgKyAvaGVhbHRoL3JlYWR5IEs4cyBwcm9iZQogIDMuIOmUmeivr+WTjeW6lOW4piB0cmFjZV9pZCArIOS/ruWkjeW7uuiurgogIDQuIG11bHRpLWRlbGVnYXRlIOS4u+WKqOajgOafpSArIOWksei0peS4jeaKmwogIDUuIOWJjeerr+iDveaLv+WIsOWQjuerryB0cmFjZV9pZCAo6YeN6K+VICsg6ZSZ6K+v5bGV56S6KQogIDYuIDV4eCDoh6rliqjph43or5UKICA3LiA0eHgg5LiN6YeN6K+VICjnlKjmiLfplJnor68pCiIiIgpCQUNLRU5EID0gImh0dHA6Ly8xMjcuMC4wLjE6ODAwMCIKS0VZID0gb3MuZW52aXJvbi5nZXQoIkRBVEFfQUlfVEVTVF9BUElfS0VZIiwgInNrLVJFUExBQ0VfV0lUSF9ZT1VSX1RFU1RfS0VZIikgICMg5YCf5rWL6K+V55SoCkhFQURFUlMgPSB7IkF1dGhvcml6YXRpb24iOiBmIkJlYXJlciB7S0VZfSIsICJDb250ZW50LVR5cGUiOiAiYXBwbGljYXRpb24vanNvbiJ9CnJlc3VsdHM6IGxpc3RbdHVwbGVbc3RyLCBib29sLCBzdHJdXSA9IFtdCmlmIF9fbmFtZV9fID09ICJfX21haW5fXyI6CiAgICBzeXMuZXhpdChhc3luY2lvLnJ1bihtYWluKCkpKQo=').decode("utf-8")
+
+_MODULE_BODY = _b64.b64decode(
+    "IiIiClAxLTcg56uv5Yiw56uv5rWL6K+VIOKAlCDkuLvliqjmo4Dmn6UgLyDoh6rliqjph43ov54gLyDlh4bnoa7miqXplJkgLyDlpJrlp5TmtL4KCua1i+ivleWcuuaZrzoKICAxLiAvaGVhbHRoIOa3seW6puajgOafpSDigJQg5ZCrIGNoZWNrcyAvIGZpeGVzIC8gdHJhY2VfaWQgLyB1cHRpbWUKICAyLiAvaGVhbHRoL2xpdmUgKyAvaGVhbHRoL3JlYWR5IEs4cyBwcm9iZQogIDMuIOmUmeivr+WTjeW6lOW4piB0cmFjZV9pZCArIOS/ruWkjeW7uuiurgogIDQuIG11bHRpLWRlbGVnYXRlIOS4u+WKqOajgOafpSArIOWksei0peS4jeaKmwogIDUuIOWJjeerr+iDveaLv+WIsOWQjuerryB0cmFjZV9pZCAo6YeN6K+VICsg6ZSZ6K+v5bGV56S6KQogIDYuIDV4eCDoh6rliqjph43or5UKICA3LiA0eHgg5LiN6YeN6K+VICjnlKjmiLfplJnor68pCiIiIgpCQUNLRU5EID0gImh0dHA6Ly8xMjcuMC4wLjE6ODAwMCIKS0VZID0gb3MuZW52aXJvbi5nZXQoIkRBVEFfQUlfVEVTVF9BUElfS0VZIiwgInNrLVJFUExBQ0VfV0lUSF9ZT1VSX1RFU1RfS0VZIikgICMg5YCf5rWL6K+V55SoCkhFQURFUlMgPSB7IkF1dGhvcml6YXRpb24iOiBmIkJlYXJlciB7S0VZfSIsICJDb250ZW50LVR5cGUiOiAiYXBwbGljYXRpb24vanNvbiJ9CnJlc3VsdHM6IGxpc3RbdHVwbGVbc3RyLCBib29sLCBzdHJdXSA9IFtdCmlmIF9fbmFtZV9fID09ICJfX21haW5fXyI6CiAgICBzeXMuZXhpdChhc3luY2lvLnJ1bihtYWluKCkpKQo="
+).decode("utf-8")
+
 
 def _run_module_body() -> None:
     """执行原顶层可执行代码, 把 ``sys.exit()`` 转成 ``SystemExit`` 异常."""
     _orig_exit = _sys.exit
+
     def _safe_exit(code=0):
         raise SystemExit(code)
+
     _sys.exit = _safe_exit
     try:
         exec(compile(_MODULE_BODY, __file__, "exec"), globals())
     finally:
         _sys.exit = _orig_exit
+
 
 if __name__ == "__main__":
     _run_module_body()

@@ -172,6 +172,7 @@ def test_exponential_backoff() -> None:
     orig_sleep = asyncio.sleep
     asyncio.sleep = _patched_sleep  # type: ignore
     try:
+
         def always_fail() -> str:
             raise ConnectionError("x")
 
@@ -186,8 +187,11 @@ def test_exponential_backoff() -> None:
     _check("共 3 次 sleep (3 retry)", len(sleeps) == 3, f"got {len(sleeps)}: {sleeps}")
     # 预期 0.5, 1.0, 2.0 (no jitter)
     expected = [0.5, 1.0, 2.0]
-    _check("退避序列是 0.5, 1.0, 2.0", all(abs(s - e) < 0.01 for s, e in zip(sleeps, expected)),
-           f"got {sleeps} expected {expected}")
+    _check(
+        "退避序列是 0.5, 1.0, 2.0",
+        all(abs(s - e) < 0.01 for s, e in zip(sleeps, expected)),
+        f"got {sleeps} expected {expected}",
+    )
 
 
 test_exponential_backoff()
@@ -207,6 +211,7 @@ def test_max_delay_cap() -> None:
     orig_sleep = asyncio.sleep
     asyncio.sleep = _patched_sleep  # type: ignore
     try:
+
         def always_fail() -> str:
             raise ConnectionError("x")
 
@@ -220,8 +225,7 @@ def test_max_delay_cap() -> None:
 
     # 退避序列理论值 0.5, 1.0, 2.0, 4.0; 封顶 1.5
     # 实际 0.5, 1.0, 1.5, 1.5
-    _check("最后 2 次 sleep = 1.5 (cap)", abs(sleeps[2] - 1.5) < 0.01 and abs(sleeps[3] - 1.5) < 0.01,
-           f"got {sleeps}")
+    _check("最后 2 次 sleep = 1.5 (cap)", abs(sleeps[2] - 1.5) < 0.01 and abs(sleeps[3] - 1.5) < 0.01, f"got {sleeps}")
 
 
 test_max_delay_cap()
@@ -241,6 +245,7 @@ def test_jitter() -> None:
     orig_sleep = asyncio.sleep
     asyncio.sleep = _patched_sleep  # type: ignore
     try:
+
         def always_fail() -> str:
             raise ConnectionError("x")
 
@@ -305,7 +310,7 @@ def test_tool_not_found_no_retry() -> None:
     try:
         asyncio.run(_run())
     except Exception as e:
-        raised = isinstance(e, (ToolNotFoundError, ToolExecutionError))
+        raised = isinstance(e, ToolNotFoundError | ToolExecutionError)
     _check("ToolNotFound 立即抛", raised)
 
 
@@ -333,7 +338,11 @@ def test_custom_retry_on() -> None:
 
     async def _run():
         return await reg.execute_with_retry(
-            "custom", {}, max_retries=3, base_delay=0.01, jitter=0.0,
+            "custom",
+            {},
+            max_retries=3,
+            base_delay=0.01,
+            jitter=0.0,
             retry_on=(_CustomError,),
         )
 
@@ -416,28 +425,41 @@ sys.exit(0)
 
 """
 
+
 def _run_module_body() -> None:
     """执行原模块体, 把 ``sys.exit()`` 包装成 ``RuntimeError``."""
     import sys as _sys
+
     _orig_exit = _sys.exit
+
     def _safe_exit(code=0):
         raise SystemExit(code)
+
     _sys.exit = _safe_exit
     try:
         exec(compile(_MODULE_BODY, __file__, "exec"), globals())
     finally:
         _sys.exit = _orig_exit
 
+
 if __name__ == "__main__":
     _run_module_body()
+
 
 # ── pytest 集成 ────────────────────────────────────────────
 def test_test_p1_4_tool_retry() -> None:
     """原模块体直接执行, 把 sys.exit 转成 pytest 结果."""
-    import sys
     import pytest as _pytest
+
     try:
-        exec(compile('test_async_tool_retry()\n\n\n# ── 总结 ──────────────────────────────────\n\n\nprint("\\n" + "=" * 60)\nprint(f"P1-4 测试: {passed} passed, {failed} failed")\nprint("=" * 60)\nif failed:\n    print("失败详情:")\n    for m in fail_msgs:\n        print(f"  - {m}")\n    sys.exit(1)\nsys.exit(0)\n' , 'tests\\test_p1_4_tool_retry.py', "exec"), globals())
+        exec(
+            compile(
+                'test_async_tool_retry()\n\n\n# ── 总结 ──────────────────────────────────\n\n\nprint("\\n" + "=" * 60)\nprint(f"P1-4 测试: {passed} passed, {failed} failed")\nprint("=" * 60)\nif failed:\n    print("失败详情:")\n    for m in fail_msgs:\n        print(f"  - {m}")\n    sys.exit(1)\nsys.exit(0)\n',
+                "tests\\test_p1_4_tool_retry.py",
+                "exec",
+            ),
+            globals(),
+        )
     except SystemExit as e:
         code = e.code if isinstance(e.code, int) else 1
         if code != 0:

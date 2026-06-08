@@ -135,8 +135,7 @@ class MCPServerProxy:
                 )
             except FileNotFoundError as e:
                 raise RuntimeError(
-                    f"Failed to spawn {self.cfg.command}: {e}. "
-                    "Check that the command is installed and on PATH."
+                    f"Failed to spawn {self.cfg.command}: {e}. " "Check that the command is installed and on PATH."
                 )
             except Exception as e:
                 raise RuntimeError(f"Failed to spawn MCP server: {e!r}")
@@ -161,9 +160,7 @@ class MCPServerProxy:
                 try:
                     resp = json.loads(line.decode("utf-8").strip())
                 except json.JSONDecodeError as e:
-                    raise RuntimeError(
-                        f"MCP server returned invalid JSON: {line[:200]!r} (err={e})"
-                    )
+                    raise RuntimeError(f"MCP server returned invalid JSON: {line[:200]!r} (err={e})")
                 if "error" in resp and resp["error"]:
                     raise RuntimeError(f"MCP error: {resp['error']}")
                 return resp.get("result", {})
@@ -352,11 +349,13 @@ class InProcessMCPServer:
         for child in sorted(p.iterdir())[: int(max_items)]:
             try:
                 st = child.stat()
-                items.append({
-                    "name": child.name,
-                    "type": "dir" if child.is_dir() else "file",
-                    "size": st.st_size if child.is_file() else None,
-                })
+                items.append(
+                    {
+                        "name": child.name,
+                        "type": "dir" if child.is_dir() else "file",
+                        "size": st.st_size if child.is_file() else None,
+                    }
+                )
             except (PermissionError, FileNotFoundError):
                 continue
         return {"path": str(p), "count": len(items), "items": items}

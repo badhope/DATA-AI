@@ -635,9 +635,7 @@ class RecoveryEngine:
                 "drills": {k: v.to_dict() for k, v in self._drills.items()},
                 "holds": {k: v.to_dict() for k, v in self._holds.items()},
             }
-            self._persist_path.write_text(
-                json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
-            )
+            self._persist_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         except Exception:
             pass
 
@@ -745,6 +743,7 @@ class RecoveryEngine:
 
 
 # ---- helpers ----
+
 
 def _next_cron_time(expr: str, from_ts: float) -> float:
     """简化版: 不解析完整 cron,只支持预设 '0 2 * * *' (每天2点) 等"""

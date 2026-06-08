@@ -18,6 +18,7 @@ P1-1 跟 P1-2 (Human-in-the-Loop) 配合:
 - Human approval 暂停时,AgentCheckpoint.status = "awaiting_approval"
 - HTTP 端点 /v1/agents/runs/{id}/approve 后调 resume() 继续
 """
+
 from __future__ import annotations
 
 import abc
@@ -140,6 +141,7 @@ class FileCheckpointStore(AgentCheckpointStore):
         data = json.dumps(checkpoint.to_dict(), ensure_ascii=False, default=str)
         path = self._path(checkpoint.run_id)
         loop = asyncio.get_event_loop()
+
         # 写盘是 IO 密集,丢到默认 executor
         def _write():
             if self.compress:

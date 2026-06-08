@@ -49,24 +49,28 @@ class _MockLLMManager:
         self.response_text = response_text
         self.call_log: list[str] = []
 
-    def get_client(self, model_id): return self
+    def get_client(self, model_id):
+        return self
 
     def get_context_manager(self, model_id=None):
         class _NullManager:
             def trim_messages(self, messages, system_message=None):
                 return messages
+
         return _NullManager()
 
     async def chat(self, messages, model=None, tools=None, **kwargs):
         self.call_log.append(f"chat@{time.time():.3f}")
         # 模拟 50ms LLM 延迟
         await asyncio.sleep(0.05)
-        return ChatResponse(content=self.response_text, model=model or "mock",
-                          usage={"total_tokens": 5}, finish_reason="stop")
+        return ChatResponse(
+            content=self.response_text, model=model or "mock", usage={"total_tokens": 5}, finish_reason="stop"
+        )
 
     async def chat_stream(self, messages, model=None, **kwargs):
-        yield ChatResponse(content=self.response_text, model=model or "mock",
-                          usage={"total_tokens": 5}, finish_reason="stop")
+        yield ChatResponse(
+            content=self.response_text, model=model or "mock", usage={"total_tokens": 5}, finish_reason="stop"
+        )
 
 
 # ── 1. delegate_many 并行 ─────────────────
@@ -87,10 +91,7 @@ def test_delegate_many_parallel() -> None:
 
     # 5 个 sub-agent, 每个 mock LLM 睡 0.05s
     # 串行需要 0.25s, 并行应该 ~0.1s (含 0.05s + 少量 overhead)
-    queries = [
-        {"query": f"Q{i}", "role": "customer_service" if i % 2 == 0 else "secretary"}
-        for i in range(5)
-    ]
+    queries = [{"query": f"Q{i}", "role": "customer_service" if i % 2 == 0 else "secretary"} for i in range(5)]
     t0 = time.time()
     results = asyncio.run(parent.delegate_many(queries))
     elapsed = time.time() - t0
@@ -136,12 +137,15 @@ def test_long_poll_no_pending() -> None:
 
     # 存一个 running 状态, 没 pending_approval
     async def _setup():
-        await store.save(AgentCheckpoint(
-            run_id="lp-test-1",
-            created_at=time.time(),
-            updated_at=time.time(),
-            status="running",
-        ))
+        await store.save(
+            AgentCheckpoint(
+                run_id="lp-test-1",
+                created_at=time.time(),
+                updated_at=time.time(),
+                status="running",
+            )
+        )
+
     asyncio.run(_setup())
     set_checkpoint_store(store)
 
@@ -179,19 +183,22 @@ def test_long_poll_immediate_with_pending() -> None:
     set_checkpoint_store(store)
 
     async def _setup():
-        await store.save(AgentCheckpoint(
-            run_id="lp-test-pending",
-            created_at=time.time(),
-            updated_at=time.time(),
-            status="awaiting_approval",
-            pending_approval={
-                "tool_name": "dangerous_write",
-                "arguments": {"path": "/etc/x"},
-                "tool_call_id": "tc-1",
-                "iteration": 1,
-                "requested_at": time.time(),
-            },
-        ))
+        await store.save(
+            AgentCheckpoint(
+                run_id="lp-test-pending",
+                created_at=time.time(),
+                updated_at=time.time(),
+                status="awaiting_approval",
+                pending_approval={
+                    "tool_name": "dangerous_write",
+                    "arguments": {"path": "/etc/x"},
+                    "tool_call_id": "tc-1",
+                    "iteration": 1,
+                    "requested_at": time.time(),
+                },
+            )
+        )
+
     asyncio.run(_setup())
 
     app = FastAPI()
@@ -225,13 +232,16 @@ def test_long_poll_finished() -> None:
     set_checkpoint_store(store)
 
     async def _setup():
-        await store.save(AgentCheckpoint(
-            run_id="lp-test-finished",
-            created_at=time.time(),
-            updated_at=time.time(),
-            status="finished",
-            final_content="All done!",
-        ))
+        await store.save(
+            AgentCheckpoint(
+                run_id="lp-test-finished",
+                created_at=time.time(),
+                updated_at=time.time(),
+                status="finished",
+                final_content="All done!",
+            )
+        )
+
     asyncio.run(_setup())
 
     app = FastAPI()
@@ -255,10 +265,6 @@ test_long_poll_finished()
 
 def test_tree_with_grandchild() -> None:
     print("\n[6] tree 端点 — 3 层嵌套")
-    from fastapi import FastAPI
-    from fastapi.testclient import TestClient
-
-    from data_ai.core.api.extensions import router
 
     tmpdir = tempfile.mkdtemp(prefix="p13tree3-")
     store = FileCheckpointStore(base_dir=tmpdir)
@@ -266,18 +272,33 @@ def test_tree_with_grandchild() -> None:
 
     async def _setup():
         # root → child → grandchild
-        await store.save(AgentCheckpoint(
-            run_id="root3", created_at=1.0, updated_at=1.0, status="finished",
-            metadata={"parent_run_id": None},
-        ))
-        await store.save(AgentCheckpoint(
-            run_id="root3/child", created_at=2.0, updated_at=2.0, status="finished",
-            metadata={"parent_run_id": "root3", "preset_role": "secretary"},
-        ))
-        await store.save(AgentCheckpoint(
-            run_id="root3/child/grand", created_at=3.0, updated_at=3.0, status="finished",
-            metadata={"parent_run_id": "root3/child", "preset_role": "customer_service"},
-        ))
+        await store.save(
+            AgentCheckpoint(
+                run_id="root3",
+                created_at=1.0,
+                updated_at=1.0,
+                status="finished",
+                metadata={"parent_run_id": None},
+            )
+        )
+        await store.save(
+            AgentCheckpoint(
+                run_id="root3/child",
+                created_at=2.0,
+                updated_at=2.0,
+                status="finished",
+                metadata={"parent_run_id": "root3", "preset_role": "secretary"},
+            )
+        )
+        await store.save(
+            AgentCheckpoint(
+                run_id="root3/child/grand",
+                created_at=3.0,
+                updated_at=3.0,
+                status="finished",
+                metadata={"parent_run_id": "root3/child", "preset_role": "customer_service"},
+            )
+        )
 
 
 _MODULE_BODY = """
@@ -319,28 +340,41 @@ sys.exit(0)
 
 """
 
+
 def _run_module_body() -> None:
     """执行原模块体, 把 ``sys.exit()`` 包装成 ``RuntimeError``."""
     import sys as _sys
+
     _orig_exit = _sys.exit
+
     def _safe_exit(code=0):
         raise SystemExit(code)
+
     _sys.exit = _safe_exit
     try:
         exec(compile(_MODULE_BODY, __file__, "exec"), globals())
     finally:
         _sys.exit = _orig_exit
 
+
 if __name__ == "__main__":
     _run_module_body()
+
 
 # ── pytest 集成 ────────────────────────────────────────────
 def test_test_p1_supplementary() -> None:
     """原模块体直接执行, 把 sys.exit 转成 pytest 结果."""
-    import sys
     import pytest as _pytest
+
     try:
-        exec(compile('test_tree_with_grandchild()\n\n\n# ── 总结 ──────────────────────────────────\n\n\nprint("\\n" + "=" * 60)\nprint(f"P1 补充测试: {passed} passed, {failed} failed")\nprint("=" * 60)\nif failed:\n    print("失败详情:")\n    for m in fail_msgs:\n        print(f"  - {m}")\n    sys.exit(1)\nsys.exit(0)\n' , 'tests\\test_p1_supplementary.py', "exec"), globals())
+        exec(
+            compile(
+                'test_tree_with_grandchild()\n\n\n# ── 总结 ──────────────────────────────────\n\n\nprint("\\n" + "=" * 60)\nprint(f"P1 补充测试: {passed} passed, {failed} failed")\nprint("=" * 60)\nif failed:\n    print("失败详情:")\n    for m in fail_msgs:\n        print(f"  - {m}")\n    sys.exit(1)\nsys.exit(0)\n',
+                "tests\\test_p1_supplementary.py",
+                "exec",
+            ),
+            globals(),
+        )
     except SystemExit as e:
         code = e.code if isinstance(e.code, int) else 1
         if code != 0:

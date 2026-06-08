@@ -113,8 +113,7 @@ class MMRRetriever(Retriever):
 
             if scored:
                 max_similarity = max(
-                    self._cosine_similarity(entry_emb, sel_doc.metadata.get("_emb") or [])
-                    for _, sel_doc in scored
+                    self._cosine_similarity(entry_emb, sel_doc.metadata.get("_emb") or []) for _, sel_doc in scored
                 )
                 diversity = 1 - max_similarity
             else:

@@ -287,9 +287,7 @@ class JobScheduler:
                 executor = EXECUTORS.get(job.action_type)
                 if not executor:
                     raise ValueError(f"unknown action_type: {job.action_type}")
-                result = loop.run_until_complete(
-                    asyncio.wait_for(executor(job), timeout=job.timeout_sec)
-                )
+                result = loop.run_until_complete(asyncio.wait_for(executor(job), timeout=job.timeout_sec))
                 exec_rec.output = json.dumps(result, ensure_ascii=False, default=str)[:2000]
                 exec_rec.status = "success"
                 job.last_status = "success"

@@ -42,12 +42,14 @@ class Tenant:
     region: str = "default"  # 数据驻留区域
     contact_email: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
-    limits: dict[str, Any] = field(default_factory=lambda: {
-        "max_users": 5,
-        "max_agents": 10,
-        "max_tokens_per_day": 100_000,
-        "max_storage_mb": 1024,
-    })
+    limits: dict[str, Any] = field(
+        default_factory=lambda: {
+            "max_users": 5,
+            "max_agents": 10,
+            "max_tokens_per_day": 100_000,
+            "max_storage_mb": 1024,
+        }
+    )
     created_at: float = field(default_factory=time.time)
     updated_at: float = field(default_factory=time.time)
 
@@ -162,7 +164,9 @@ class TenantStore:
         return self.update(tenant_id, status="active")
 
     # ---------- 成员 ----------
-    def add_member(self, tenant_id: str, user_id: str, role: MemberRole = "member", invited_by: str = "") -> TenantMember:
+    def add_member(
+        self, tenant_id: str, user_id: str, role: MemberRole = "member", invited_by: str = ""
+    ) -> TenantMember:
         with self._lock:
             # 重复检查
             for m in self._members:
@@ -265,6 +269,7 @@ def reset_tenant_store() -> None:
 
 # ---------- 上下文 (FastAPI request.state.tenant) ----------
 
+
 @dataclass
 class TenantContext:
     """当前请求的租户上下文"""
@@ -284,15 +289,16 @@ class TenantContext:
 
 # ---------- 跨租户访问防护 ----------
 
+
 def enforce_tenant(resource_tenant_id: str, ctx: TenantContext) -> None:
     """强制资源归属当前租户。跨租户访问抛 PermissionError。"""
     if not ctx.is_authenticated():
         raise PermissionError("no tenant context")
     if resource_tenant_id and resource_tenant_id != ctx.tenant_id:
         from data_ai.utils.logging import get_logger
+
         get_logger("tenants").warning(
-            f"cross-tenant access blocked: ctx={ctx.tenant_id} resource={resource_tenant_id} "
-            f"user={ctx.user_id}"
+            f"cross-tenant access blocked: ctx={ctx.tenant_id} resource={resource_tenant_id} " f"user={ctx.user_id}"
         )
         raise PermissionError(
             f"cross-tenant access denied: resource belongs to {resource_tenant_id}, "
@@ -318,6 +324,7 @@ def resolve_tenant_from_request(
 
 
 # ---------- 常用工具 ----------
+
 
 def now_iso() -> str:
     return datetime.fromtimestamp(time.time()).isoformat()

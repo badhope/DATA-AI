@@ -231,10 +231,18 @@ class BillingEngine:
             pricing = self.get_pricing(model_id)
             cost = pricing.calculate(prompt_tokens, completion_tokens, cached_tokens)
             r = UsageRecord(
-                tenant_id=tenant_id, user_id=user_id, cost_center_id=cost_center_id, project=project,
-                resource_type=resource_type, resource_id=resource_id, model_id=model_id,
-                prompt_tokens=prompt_tokens, completion_tokens=completion_tokens, cached_tokens=cached_tokens,
-                cost_usd=cost, currency=pricing.currency,
+                tenant_id=tenant_id,
+                user_id=user_id,
+                cost_center_id=cost_center_id,
+                project=project,
+                resource_type=resource_type,
+                resource_id=resource_id,
+                model_id=model_id,
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+                cached_tokens=cached_tokens,
+                cost_usd=cost,
+                currency=pricing.currency,
             )
             self._records.append(r)
             # 限制内存:最近 5 万条
@@ -244,7 +252,12 @@ class BillingEngine:
             return r
 
     def list_records(
-        self, tenant_id: str = "", cost_center_id: str = "", since: float | None = None, until: float | None = None, limit: int = 100
+        self,
+        tenant_id: str = "",
+        cost_center_id: str = "",
+        since: float | None = None,
+        until: float | None = None,
+        limit: int = 100,
     ) -> list[UsageRecord]:
         with self._lock:
             out = []
@@ -302,25 +315,41 @@ class BillingEngine:
                 period_start = self._period_start(b.period, now)
                 used = sum(r.cost_usd for r in self._records if r.occurred_at >= period_start)
                 if b.scope == "tenant":
-                    used = sum(r.cost_usd for r in self._records if r.tenant_id == b.scope_id and r.occurred_at >= period_start)
+                    used = sum(
+                        r.cost_usd for r in self._records if r.tenant_id == b.scope_id and r.occurred_at >= period_start
+                    )
                 elif b.scope == "cost_center":
-                    used = sum(r.cost_usd for r in self._records if r.cost_center_id == b.scope_id and r.occurred_at >= period_start)
+                    used = sum(
+                        r.cost_usd
+                        for r in self._records
+                        if r.cost_center_id == b.scope_id and r.occurred_at >= period_start
+                    )
 
                 usage_pct = used / b.amount_usd if b.amount_usd > 0 else 0.0
                 if usage_pct >= 1.0:
                     if b.hard_limit:
                         hard_exceeded = True
-                    alerts.append({
-                        "budget_id": b.id, "budget_name": b.name, "used_usd": round(used, 4),
-                        "limit_usd": b.amount_usd, "usage_pct": round(usage_pct * 100, 1),
-                        "level": "exceeded",
-                    })
+                    alerts.append(
+                        {
+                            "budget_id": b.id,
+                            "budget_name": b.name,
+                            "used_usd": round(used, 4),
+                            "limit_usd": b.amount_usd,
+                            "usage_pct": round(usage_pct * 100, 1),
+                            "level": "exceeded",
+                        }
+                    )
                 elif usage_pct >= b.warn_threshold:
-                    alerts.append({
-                        "budget_id": b.id, "budget_name": b.name, "used_usd": round(used, 4),
-                        "limit_usd": b.amount_usd, "usage_pct": round(usage_pct * 100, 1),
-                        "level": "warning",
-                    })
+                    alerts.append(
+                        {
+                            "budget_id": b.id,
+                            "budget_name": b.name,
+                            "used_usd": round(used, 4),
+                            "limit_usd": b.amount_usd,
+                            "usage_pct": round(usage_pct * 100, 1),
+                            "level": "warning",
+                        }
+                    )
             return (not hard_exceeded), alerts
 
     def _period_start(self, period: BudgetPeriod, now: float) -> float:
@@ -369,9 +398,9 @@ class BillingEngine:
             if until is None:
                 until = now
             records = [
-                r for r in self._records
-                if r.occurred_at >= since and r.occurred_at <= until
-                and (not tenant_id or r.tenant_id == tenant_id)
+                r
+                for r in self._records
+                if r.occurred_at >= since and r.occurred_at <= until and (not tenant_id or r.tenant_id == tenant_id)
             ]
             total_cost = sum(r.cost_usd for r in records)
             total_tokens = sum(r.prompt_tokens + r.completion_tokens for r in records)
@@ -399,16 +428,17 @@ class BillingEngine:
                 "total_cost_usd": round(total_cost, 4),
                 "total_tokens": total_tokens,
                 "total_requests": total_requests,
-                "by_model": {k: {"cost_usd": round(v["cost_usd"], 4), "tokens": int(v["tokens"]), "requests": int(v["requests"])} for k, v in by_model.items()},
+                "by_model": {
+                    k: {"cost_usd": round(v["cost_usd"], 4), "tokens": int(v["tokens"]), "requests": int(v["requests"])}
+                    for k, v in by_model.items()
+                },
                 "by_cost_center": {k: round(v, 4) for k, v in by_cc.items()},
                 "by_resource_type": {k: round(v, 4) for k, v in by_rt.items()},
                 "since": since,
                 "until": until,
             }
 
-    def cost_by_day(
-        self, tenant_id: str = "", days: int = 30, until: float | None = None
-    ) -> list[dict[str, Any]]:
+    def cost_by_day(self, tenant_id: str = "", days: int = 30, until: float | None = None) -> list[dict[str, Any]]:
         """按日聚合成本(用于画趋势图)"""
         with self._lock:
             now = until or time.time()
@@ -443,18 +473,30 @@ class BillingEngine:
             top = sorted(agg.items(), key=lambda x: x[1], reverse=True)[:limit]
             return [{"key": k, "cost_usd": round(c, 4)} for k, c in top]
 
-    def export_invoice(
-        self, tenant_id: str, since: float, until: float, format: str = "json"
-    ) -> str:
+    def export_invoice(self, tenant_id: str, since: float, until: float, format: str = "json") -> str:
         """导出账单"""
         records = self.list_records(tenant_id=tenant_id, since=since, until=until, limit=100000)
         if format == "csv":
             import csv
             import io
+
             buf = io.StringIO()
-            w = csv.DictWriter(buf, fieldnames=records[0].to_dict().keys() if records else [
-                "id", "tenant_id", "user_id", "cost_center_id", "model_id", "prompt_tokens", "completion_tokens", "cost_usd", "occurred_at"
-            ])
+            w = csv.DictWriter(
+                buf,
+                fieldnames=records[0].to_dict().keys()
+                if records
+                else [
+                    "id",
+                    "tenant_id",
+                    "user_id",
+                    "cost_center_id",
+                    "model_id",
+                    "prompt_tokens",
+                    "completion_tokens",
+                    "cost_usd",
+                    "occurred_at",
+                ],
+            )
             w.writeheader()
             for r in records:
                 w.writerow(r.to_dict())

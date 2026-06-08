@@ -312,7 +312,7 @@ class CodeParser:
 
         # 第一遍：处理 module-level 节点
         for node in tree.body:
-            if isinstance(node, (ast.Import, ast.ImportFrom)):
+            if isinstance(node, ast.Import | ast.ImportFrom):
                 imp_name = self._extract_import_name(node)
                 if imp_name:
                     imports.append(imp_name)
@@ -340,14 +340,14 @@ class CodeParser:
                             "annotated": True,
                         }
                     )
-            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 symbols.append(self._parse_function(node, str(path)))
             elif isinstance(node, ast.ClassDef):
                 symbols.append(self._parse_class(node, str(path)))
 
         # 第二遍：解析所有函数 / 类的依赖（包括嵌套）
         for node in ast.walk(tree):
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and not self._is_module_level(tree, node):
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and not self._is_module_level(tree, node):
                 # 嵌套函数 / 方法在 _parse_class 中已经处理
                 if not any(s.location.line_start == node.lineno for s in symbols):
                     symbols.append(self._parse_function(node, str(path)))
@@ -391,7 +391,7 @@ class CodeParser:
 
     def _parse_function(self, node: ast.AST, file_path: str) -> CodeSymbol:
         """解析 Python 函数 / 异步函数定义。"""
-        assert isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        assert isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
         parameters: list[dict[str, str]] = []
         args = node.args
         # 位置参数

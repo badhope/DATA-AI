@@ -63,7 +63,9 @@ class Region:
 
 
 # 数据类型
-DataClass = Literal["user_data", "pii", "phi", "financial", "audit_log", "model_artifact", "embedding", "session", "metric"]
+DataClass = Literal[
+    "user_data", "pii", "phi", "financial", "audit_log", "model_artifact", "embedding", "session", "metric"
+]
 DefaultRegion = Literal["auto", "cn-east", "eu-west", "us-east", "ap-southeast"]
 
 
@@ -240,16 +242,17 @@ class ResidencyRouter:
                         break
             target = candidates[0] if candidates else "default"
             a = ResidencyAssignment(
-                resource_id=resource_id, data_class=data_class, region_id=target,
-                tenant_id=tenant_id, policy_id=policy.id if policy else "",
+                resource_id=resource_id,
+                data_class=data_class,
+                region_id=target,
+                tenant_id=tenant_id,
+                policy_id=policy.id if policy else "",
                 encrypted=policy.encryption_required if policy else True,
             )
             self._assignments.append(a)
             return a
 
-    def can_transfer(
-        self, resource_id: str, from_region: str, to_region: str
-    ) -> tuple[bool, str]:
+    def can_transfer(self, resource_id: str, from_region: str, to_region: str) -> tuple[bool, str]:
         """检查是否允许跨区域传输"""
         # 找到 resource 的 assignment
         assignment = next((a for a in reversed(self._assignments) if a.resource_id == resource_id), None)
@@ -263,7 +266,9 @@ class ResidencyRouter:
         ok, reason = policy.check(to_region)
         return ok, reason
 
-    def list_assignments(self, tenant_id: str = "", data_class: DataClass | None = None, limit: int = 100) -> list[ResidencyAssignment]:
+    def list_assignments(
+        self, tenant_id: str = "", data_class: DataClass | None = None, limit: int = 100
+    ) -> list[ResidencyAssignment]:
         with self._lock:
             out = []
             for a in reversed(self._assignments):

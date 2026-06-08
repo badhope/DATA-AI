@@ -357,13 +357,11 @@ class ToolRegistry:
             except Exception as exc:
                 # 1) permanent: 立即抛
                 if isinstance(exc, permanent_on):
-                    logger.warning(
-                        f"[tool-retry] permanent error, no retry: tool={name} err={exc!r}"
-                    )
+                    logger.warning(f"[tool-retry] permanent error, no retry: tool={name} err={exc!r}")
                     raise
                 # 2) retryable: 重试
                 if _is_retryable(exc) and attempt < max_retries:
-                    delay = min(base_delay * (2 ** attempt), max_delay)
+                    delay = min(base_delay * (2**attempt), max_delay)
                     if jitter > 0:
                         delay = delay * (1.0 + random.uniform(-jitter, jitter))
                         delay = max(0.0, delay)
@@ -375,9 +373,7 @@ class ToolRegistry:
                     await asyncio.sleep(delay)
                     continue
                 # 3) 其它: 立即抛(不重试)
-                logger.error(
-                    f"[tool-retry] non-retryable error: tool={name} err={exc!r}"
-                )
+                logger.error(f"[tool-retry] non-retryable error: tool={name} err={exc!r}")
                 raise
         # 不该到这里,只是给 type-checker 看
         assert last_exc is not None

@@ -86,8 +86,9 @@ class _MockLLMManager:
 
     async def chat_stream(self, messages, model=None, **kwargs):
         # 简单实现:吐一个 token 就停
-        yield ChatResponse(content=self.response_text, model=model or "mock",
-                          usage={"total_tokens": 10}, finish_reason="stop")
+        yield ChatResponse(
+            content=self.response_text, model=model or "mock", usage={"total_tokens": 10}, finish_reason="stop"
+        )
 
 
 # ── 1. DefaultAgent 存在 ─────────────────────────────
@@ -180,10 +181,14 @@ def test_do_delegate_subagent() -> None:
     )
     a.run_id = "p13-test-002"
 
-    result_str = asyncio.run(a._do_delegate_subagent({
-        "query": "查一下物流",
-        "role": "secretary",
-    }))
+    result_str = asyncio.run(
+        a._do_delegate_subagent(
+            {
+                "query": "查一下物流",
+                "role": "secretary",
+            }
+        )
+    )
     _check("返回是字符串", isinstance(result_str, str))
     _check("含 sub_run_id 字段", "run_id" in result_str)
     _check("含 preset_role=secretary", "secretary" in result_str)
@@ -294,10 +299,11 @@ def test_subagent_error_isolation() -> None:
 
     # 用 _do_delegate_subagent 走 LLM 会 boom,我们 inject 一个 boom
     parent.llm = _BoomLLM()  # type: ignore
-    result_str = asyncio.run(parent._do_delegate_subagent({
-        "query": "Q", "role": "secretary"
-    }))
-    _check("sub-agent 失败时 parent 不崩(返回 error 字符串)", "error" in result_str.lower() or "Sub-agent error" in result_str)
+    result_str = asyncio.run(parent._do_delegate_subagent({"query": "Q", "role": "secretary"}))
+    _check(
+        "sub-agent 失败时 parent 不崩(返回 error 字符串)",
+        "error" in result_str.lower() or "Sub-agent error" in result_str,
+    )
 
 
 test_subagent_error_isolation()
@@ -315,27 +321,31 @@ def _make_ckpt_store_with_subruns() -> FileCheckpointStore:
         # parent
         parent_ck = AgentCheckpoint(
             run_id="http-parent-1",
-            created_at=1000.0, updated_at=1000.0,
+            created_at=1000.0,
+            updated_at=1000.0,
             status="finished",
             metadata={"preset_role": None},
         )
         # 2 个 sub
         sub1_ck = AgentCheckpoint(
             run_id="http-parent-1/sub-A",
-            created_at=1001.0, updated_at=1001.0,
+            created_at=1001.0,
+            updated_at=1001.0,
             status="finished",
             metadata={"parent_run_id": "http-parent-1", "preset_role": "customer_service"},
         )
         sub2_ck = AgentCheckpoint(
             run_id="http-parent-1/sub-B",
-            created_at=1002.0, updated_at=1002.0,
+            created_at=1002.0,
+            updated_at=1002.0,
             status="error",
             metadata={"parent_run_id": "http-parent-1", "preset_role": "finance_analyst"},
         )
         # 另一个无关 parent
         other_ck = AgentCheckpoint(
             run_id="http-parent-2",
-            created_at=1003.0, updated_at=1003.0,
+            created_at=1003.0,
+            updated_at=1003.0,
             status="finished",
             metadata={"parent_run_id": None},
         )
@@ -365,12 +375,12 @@ def test_sub_runs_endpoint() -> None:
     body = r.json()
     _check("data 是 list", isinstance(body.get("data"), list))
     _check("total=2", body.get("total") == 2, f"got {body.get('total')}")
-    _check("含 sub-A 和 sub-B",
-           {x["run_id"] for x in body["data"]} == {"http-parent-1/sub-A", "http-parent-1/sub-B"})
-    _check("preset_role 透传",
-           "customer_service" in {x["preset_role"] for x in body["data"]})
-    _check("status 透传",
-           "finished" in {x["status"] for x in body["data"]} and "error" in {x["status"] for x in body["data"]})
+    _check("含 sub-A 和 sub-B", {x["run_id"] for x in body["data"]} == {"http-parent-1/sub-A", "http-parent-1/sub-B"})
+    _check("preset_role 透传", "customer_service" in {x["preset_role"] for x in body["data"]})
+    _check(
+        "status 透传",
+        "finished" in {x["status"] for x in body["data"]} and "error" in {x["status"] for x in body["data"]},
+    )
 
     # 另一个 parent 应该是空
     r2 = client.get("/v1/agents/runs/http-parent-2/sub_runs")
@@ -468,28 +478,41 @@ sys.exit(0)
 
 """
 
+
 def _run_module_body() -> None:
     """执行原模块体, 把 ``sys.exit()`` 包装成 ``RuntimeError``."""
     import sys as _sys
+
     _orig_exit = _sys.exit
+
     def _safe_exit(code=0):
         raise SystemExit(code)
+
     _sys.exit = _safe_exit
     try:
         exec(compile(_MODULE_BODY, __file__, "exec"), globals())
     finally:
         _sys.exit = _orig_exit
 
+
 if __name__ == "__main__":
     _run_module_body()
+
 
 # ── pytest 集成 ────────────────────────────────────────────
 def test_test_p1_3_subagent() -> None:
     """原模块体直接执行, 把 sys.exit 转成 pytest 结果."""
-    import sys
     import pytest as _pytest
+
     try:
-        exec(compile('test_parent_and_sub_both_persisted()\n\n\n# ── 总结 ──────────────────────────────────────────\n\n\nprint("\\n" + "=" * 60)\nprint(f"P1-3 测试: {passed} passed, {failed} failed")\nprint("=" * 60)\nif failed:\n    print("失败详情:")\n    for m in fail_msgs:\n        print(f"  - {m}")\n    sys.exit(1)\nsys.exit(0)\n' , 'tests\\test_p1_3_subagent.py', "exec"), globals())
+        exec(
+            compile(
+                'test_parent_and_sub_both_persisted()\n\n\n# ── 总结 ──────────────────────────────────────────\n\n\nprint("\\n" + "=" * 60)\nprint(f"P1-3 测试: {passed} passed, {failed} failed")\nprint("=" * 60)\nif failed:\n    print("失败详情:")\n    for m in fail_msgs:\n        print(f"  - {m}")\n    sys.exit(1)\nsys.exit(0)\n',
+                "tests\\test_p1_3_subagent.py",
+                "exec",
+            ),
+            globals(),
+        )
     except SystemExit as e:
         code = e.code if isinstance(e.code, int) else 1
         if code != 0:

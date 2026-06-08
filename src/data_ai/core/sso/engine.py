@@ -136,6 +136,7 @@ class OIDCProvider:
             if len(parts) != 3:
                 return {"ok": False, "error": "malformed id_token"}
             import base64
+
             payload = json.loads(base64.urlsafe_b64decode(parts[1] + "==="))
         except Exception as e:
             return {"ok": False, "error": f"decode failed: {e}"}
@@ -183,14 +184,34 @@ class OIDCProvider:
 def _make_test_jwt(idp: IdentityProvider, sub: str, email: str, name: str) -> str:
     """生成测试 JWT (生产请用真实 IdP 返回)"""
     import base64
+
     header = base64.urlsafe_b64encode(json.dumps({"alg": "RS256", "typ": "JWT"}).encode()).decode().rstrip("=")
     now = int(time.time())
-    payload = base64.urlsafe_b64encode(json.dumps({
-        "iss": idp.issuer, "aud": idp.client_id, "sub": sub,
-        "email": email, "name": name, "iat": now, "exp": now + 3600,
-    }).encode()).decode().rstrip("=")
+    payload = (
+        base64.urlsafe_b64encode(
+            json.dumps(
+                {
+                    "iss": idp.issuer,
+                    "aud": idp.client_id,
+                    "sub": sub,
+                    "email": email,
+                    "name": name,
+                    "iat": now,
+                    "exp": now + 3600,
+                }
+            ).encode()
+        )
+        .decode()
+        .rstrip("=")
+    )
     # 签名简化: 用 client_secret HMAC
-    sig = base64.urlsafe_b64encode(hmac.new(idp.client_secret.encode(), f"{header}.{payload}".encode(), hashlib.sha256).digest()).decode().rstrip("=")
+    sig = (
+        base64.urlsafe_b64encode(
+            hmac.new(idp.client_secret.encode(), f"{header}.{payload}".encode(), hashlib.sha256).digest()
+        )
+        .decode()
+        .rstrip("=")
+    )
     return f"{header}.{payload}.{sig}"
 
 
@@ -251,7 +272,9 @@ class SCIMProvisioner:
         self._lock = threading.RLock()
         self._users: dict[str, SCIMUser] = {}
 
-    def upsert_user(self, user_name: str, display_name: str = "", active: bool = True, groups: list[str] | None = None) -> SCIMUser:
+    def upsert_user(
+        self, user_name: str, display_name: str = "", active: bool = True, groups: list[str] | None = None
+    ) -> SCIMUser:
         with self._lock:
             for u in self._users.values():
                 if u.user_name == user_name:
@@ -261,7 +284,10 @@ class SCIMProvisioner:
                     u.last_modified = time.time()
                     return u
             u = SCIMUser(
-                user_name=user_name, display_name=display_name, active=active, groups=groups or [],
+                user_name=user_name,
+                display_name=display_name,
+                active=active,
+                groups=groups or [],
                 emails=[{"value": user_name, "primary": True}],
             )
             self._users[u.id] = u
@@ -307,15 +333,32 @@ class SessionStore:
             self._load_from_disk()
 
     def create(
-        self, user_id: str, email: str, tenant_id: str, idp_id: str, provider_type: ProviderType,
-        access_token: str, refresh_token: str, id_token: str, expires_in: int,
-        ip: str = "", user_agent: str = "",
+        self,
+        user_id: str,
+        email: str,
+        tenant_id: str,
+        idp_id: str,
+        provider_type: ProviderType,
+        access_token: str,
+        refresh_token: str,
+        id_token: str,
+        expires_in: int,
+        ip: str = "",
+        user_agent: str = "",
     ) -> SSOSession:
         with self._lock:
             sess = SSOSession(
-                user_id=user_id, email=email, tenant_id=tenant_id, idp_id=idp_id,
-                provider_type=provider_type, access_token=access_token, refresh_token=refresh_token,
-                id_token=id_token, expires_at=time.time() + expires_in, ip=ip, user_agent=user_agent,
+                user_id=user_id,
+                email=email,
+                tenant_id=tenant_id,
+                idp_id=idp_id,
+                provider_type=provider_type,
+                access_token=access_token,
+                refresh_token=refresh_token,
+                id_token=id_token,
+                expires_at=time.time() + expires_in,
+                ip=ip,
+                user_agent=user_agent,
             )
             self._sessions[sess.id] = sess
             return sess
@@ -466,18 +509,24 @@ class SSOEngine:
             user_id = verify["sub"]
             if idp.auto_provision:
                 self._scim.upsert_user(
-                    user_name=email, display_name=verify.get("name", ""),
-                    active=True, groups=verify.get("groups", []),
+                    user_name=email,
+                    display_name=verify.get("name", ""),
+                    active=True,
+                    groups=verify.get("groups", []),
                 )
             # 4) 创建会话
             sess = self._session_store.create(
-                user_id=user_id, email=email, tenant_id=tenant_id, idp_id=idp_id,
+                user_id=user_id,
+                email=email,
+                tenant_id=tenant_id,
+                idp_id=idp_id,
                 provider_type=idp.type,
                 access_token=token_resp["access_token"],
                 refresh_token=token_resp["refresh_token"],
                 id_token=token_resp["id_token"],
                 expires_in=token_resp["expires_in"],
-                ip=ip, user_agent=user_agent,
+                ip=ip,
+                user_agent=user_agent,
             )
             return {
                 "ok": True,

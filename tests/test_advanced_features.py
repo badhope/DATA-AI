@@ -300,7 +300,6 @@ class TestRAGPipeline:
         assert count == 1
 
     def test_add_documents_empty_list(self, rag_pipeline):
-
         count = rag_pipeline.add_documents([])
         assert count == 0
 

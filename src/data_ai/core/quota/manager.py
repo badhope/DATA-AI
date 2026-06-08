@@ -309,7 +309,9 @@ class QuotaManager:
                     # 日请求数
                     if p.daily_request_limit:
                         today_start = time.time() - 86400
-                        cnt = sum(1 for r in self._usage.query(actor=actor if p.scope == "key" else None, since=today_start))
+                        cnt = sum(
+                            1 for r in self._usage.query(actor=actor if p.scope == "key" else None, since=today_start)
+                        )
                         if cnt >= p.daily_request_limit:
                             return RateLimitResult(
                                 allowed=False,

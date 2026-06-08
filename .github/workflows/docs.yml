@@ -1,0 +1,56 @@
+name: Docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  spellcheck:
+    name: Spell check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: codespell
+        uses: codespell-project/actions/codespell@main
+        with:
+          ignore_words_list: "lits,rouge,connexion,re-use,re-used,re-using,re-use,referer,aks,fo,ue,ba,roth,statics,distrib,datas,hist,hte,ist"
+          path: "."
+          exclude: |
+            .git
+            node_modules
+            dist
+            build
+            .venv
+            web/dist
+            web/node_modules
+            *.lock
+            uv.lock
+            package-lock.json
+            __pycache__
+            data/
+            scripts/_*.py
+
+  link-check:
+    name: Link check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --no-progress --accept 200,206,301,302,403 --exclude-mail --exclude-loopback
+          fail: true
+          lychee_version: latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -357,7 +357,17 @@ class OpenAIClient(BaseLLMClient):
             # P1-6: 透传 extra_params(走 extra_body)
             if self.config.extra_params:
                 for k, v in self.config.extra_params.items():
-                    if k in {"model", "messages", "stream", "tools", "stream_options", "temperature", "max_tokens", "top_p", "user"}:
+                    if k in {
+                        "model",
+                        "messages",
+                        "stream",
+                        "tools",
+                        "stream_options",
+                        "temperature",
+                        "max_tokens",
+                        "top_p",
+                        "user",
+                    }:
                         continue
                     params.setdefault("extra_body", {})[k] = v
 

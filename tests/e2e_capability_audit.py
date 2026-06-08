@@ -4,13 +4,10 @@ from __future__ import annotations
 
 import json
 import os
-import sys
 import uuid
 from typing import Any
 
 import httpx
-
-
 
 
 def check(name: str, ok: bool, detail: str = "") -> None:
@@ -169,7 +166,11 @@ def test_agent() -> None:
     check("agent.create_from_preset", bool(agent_id) and not r.get("_error"), f"id={agent_id}")
 
     # 2.4 单 agent 同步 run
-    r = post(f"/v1/agents/{agent_id}/run", {"input": "请只回复 'agent-ok'", "max_steps": 2}) if agent_id else {"_error": True, "_body": "no agent_id"}
+    r = (
+        post(f"/v1/agents/{agent_id}/run", {"input": "请只回复 'agent-ok'", "max_steps": 2})
+        if agent_id
+        else {"_error": True, "_body": "no agent_id"}
+    )
     run_id = r.get("id") or r.get("run_id")
     output = r.get("output") or r.get("final_output") or r.get("response") or ""
     if isinstance(output, dict):
@@ -187,7 +188,11 @@ def test_agent() -> None:
         else:
             check("agent.run_sync", False, f"err={err_str[:120]}")
     else:
-        check("agent.run_sync", bool(run_id) and ("agent-ok" in str(output).lower() or len(str(output)) > 0), f"run_id={run_id} output_len={len(str(output))}")
+        check(
+            "agent.run_sync",
+            bool(run_id) and ("agent-ok" in str(output).lower() or len(str(output)) > 0),
+            f"run_id={run_id} output_len={len(str(output))}",
+        )
 
     # 2.5 多委派
     r = post(
@@ -215,7 +220,11 @@ def test_agent() -> None:
             err_body = r.get("_body", {})
             err_detail = str(err_body.get("detail", "")) if isinstance(err_body, dict) else str(err_body)
             # 如果 detail 提到 "not found",端点本身工作
-            check("agent.run_tree", "not found" in err_detail.lower() or r.get("_status") == 404, f"keys={list(r.keys())[:3]} status={r.get('_status')}")
+            check(
+                "agent.run_tree",
+                "not found" in err_detail.lower() or r.get("_status") == 404,
+                f"keys={list(r.keys())[:3]} status={r.get('_status')}",
+            )
         else:
             check("agent.run_tree", True, f"keys={list(r.keys())[:5]}")
     else:
@@ -305,7 +314,11 @@ def test_mcp() -> None:
     # 4.3 in-process 工具
     r = get("/v1/mcp/servers/mcp-in-process/tools")
     tools = r.get("data", [])
-    check("mcp.list_in_process_tools", isinstance(tools, list) and len(tools) >= 5, f"{len(tools)} tools: {[t.get('name','') for t in tools[:3]]}")
+    check(
+        "mcp.list_in_process_tools",
+        isinstance(tools, list) and len(tools) >= 5,
+        f"{len(tools)} tools: {[t.get('name','') for t in tools[:3]]}",
+    )
 
     # 4.4 invoke (直接端点)
     r = post(
@@ -315,7 +328,11 @@ def test_mcp() -> None:
     success = r.get("success")
     content = r.get("content") or {}
     err_msg = r.get("error") or ""
-    check("mcp.invoke_calculate", success is True and str(content.get("result")) == "226", f"success={success} result={content.get('result', err_msg[:50])}")
+    check(
+        "mcp.invoke_calculate",
+        success is True and str(content.get("result")) == "226",
+        f"success={success} result={content.get('result', err_msg[:50])}",
+    )
 
     # 4.5 word_count invoke
     r = post(
@@ -325,13 +342,21 @@ def test_mcp() -> None:
     success = r.get("success")
     content = r.get("content") or {}
     err_msg = r.get("error") or ""
-    check("mcp.invoke_word_count", success is True and content.get("words") == 3, f"words={content.get('words', err_msg[:50])}")
+    check(
+        "mcp.invoke_word_count",
+        success is True and content.get("words") == 3,
+        f"words={content.get('words', err_msg[:50])}",
+    )
 
     # 4.6 通过 ToolRegistry 调用 (mcp__* 桥接)
     r = post("/v1/tools/execute", {"tool": "mcp__echo", "parameters": {"text": "registry-bridge-ok"}})
     result = r.get("result", {})
     bridge_ok = isinstance(result, dict) and result.get("echo") == "registry-bridge-ok"
-    check("mcp.bridge_to_tool_registry", bridge_ok or r.get("success") is True, f"result_keys={list(result.keys()) if isinstance(result, dict) else type(result).__name__}")
+    check(
+        "mcp.bridge_to_tool_registry",
+        bridge_ok or r.get("success") is True,
+        f"result_keys={list(result.keys()) if isinstance(result, dict) else type(result).__name__}",
+    )
 
     # 4.7 创建 custom server
     custom_id = None
@@ -376,7 +401,11 @@ def test_mcp() -> None:
 
     # 4.12 /v1/mcp/health
     r = get("/v1/mcp/health")
-    check("mcp.health", r.get("status") in ("ok", "degraded") and r.get("total_servers", 0) > 0, f"status={r.get('status')} servers={r.get('total_servers')}")
+    check(
+        "mcp.health",
+        r.get("status") in ("ok", "degraded") and r.get("total_servers", 0) > 0,
+        f"status={r.get('status')} servers={r.get('total_servers')}",
+    )
 
     # 4.13 /v1/mcp/tools (active 全部)
     r = get("/v1/mcp/tools")
@@ -432,14 +461,18 @@ def test_cot() -> None:
         {"question": "什么是 RAG?", "max_steps": 3, "use_llm": False},
     )
     thoughts = r.get("thoughts", [])
-    check("cot.sequential_fallback", isinstance(thoughts, list) and not r.get("_error"), f"{len(thoughts)} thoughts, final={r.get('final_answer','')[:40]!r}")
+    check(
+        "cot.sequential_fallback",
+        isinstance(thoughts, list) and not r.get("_error"),
+        f"{len(thoughts)} thoughts, final={r.get('final_answer','')[:40]!r}",
+    )
 
     # 6.2 sequential (with LLM)
     r = post(
         "/v1/reasoning/sequential",
         {"question": "23 * 17 等于多少? 只回答数字。", "max_steps": 3, "use_llm": True},
     )
-    final = (r.get("final_answer") or "")
+    final = r.get("final_answer") or ""
     has_391 = "391" in final
     check("cot.sequential_with_llm", has_391 or r.get("method") == "llm", f"final={final[:60]!r}")
 
@@ -449,7 +482,11 @@ def test_cot() -> None:
         {"question": "什么是 CoT?", "draft_answer": "CoT 是 Chain of Thought,中文叫思维链。"},
     )
     issues = r.get("issues_found", [])
-    check("cot.reflection", isinstance(issues, list) and not r.get("_error"), f"{len(issues)} issues, final={r.get('final_answer','')[:40]!r}")
+    check(
+        "cot.reflection",
+        isinstance(issues, list) and not r.get("_error"),
+        f"{len(issues)} issues, final={r.get('final_answer','')[:40]!r}",
+    )
 
     # 6.4 hypothesis
     r = post(
@@ -597,22 +634,36 @@ def test_chat_agent() -> None:
         check("agent.run", has_run_id and not has_choices, f"keys={list(r.keys())[:5]}")
 
     # 8.3 Chat 跟 Agent 形态完全不同
-    r_chat = post("/v1/chat/completions", {"model": "qwen-turbo", "messages": [{"role": "user", "content": "hi"}], "max_tokens": 5})
+    r_chat = post(
+        "/v1/chat/completions",
+        {"model": "qwen-turbo", "messages": [{"role": "user", "content": "hi"}], "max_tokens": 5},
+    )
     r_agent = post(f"/v1/agents/{aid}/run", {"input": "hi", "max_steps": 1}) if aid else {}
     # 两个端点都正常工作的话,chat 必有 choices,agent 必有 id/run_id 且不会有 choices
     chat_ok = "choices" in r_chat or (r_chat.get("_error") and "FreeTier" in json.dumps(r_chat.get("_body", "")))
     agent_ok = ("id" in r_agent or "run_id" in r_agent) and "choices" not in r_agent
-    check("chat_agent_distinct", chat_ok and agent_ok, f"chat has choices={'choices' in r_chat}, agent has id={'id' in r_agent or 'run_id' in r_agent}")
+    check(
+        "chat_agent_distinct",
+        chat_ok and agent_ok,
+        f"chat has choices={'choices' in r_chat}, agent has id={'id' in r_agent or 'run_id' in r_agent}",
+    )
 
     # 8.4 /v1/agents vs /v1/chat 端点都存在
     a = get("/v1/agents")
-    c = post("/v1/chat/completions", {"model": "qwen-turbo", "messages": [{"role": "user", "content": "ping"}], "max_tokens": 5})
+    c = post(
+        "/v1/chat/completions",
+        {"model": "qwen-turbo", "messages": [{"role": "user", "content": "ping"}], "max_tokens": 5},
+    )
     if c.get("_error"):
         c_full = json.dumps(c.get("_body", "")) if not isinstance(c.get("_body"), str) else c.get("_body", "")
         c_ok = "FreeTier" in c_full or "quota" in c_full.lower() or "AllocationQuota" in c_full
     else:
         c_ok = c.get("object") == "chat.completion"
-    check("endpoints_both_work", isinstance(a.get("data"), list) and c_ok, f"agents data={type(a.get('data')).__name__} chat object={c.get('object', 'err')} c_ok={c_ok}")
+    check(
+        "endpoints_both_work",
+        isinstance(a.get("data"), list) and c_ok,
+        f"agents data={type(a.get('data')).__name__} chat object={c.get('object', 'err')} c_ok={c_ok}",
+    )
 
 
 # ════════════════════════════════════════════════════════════════
@@ -628,7 +679,9 @@ def main() -> int:
     if r.get("_error"):
         print(f"FATAL: backend not reachable: {r}")
         return 1
-    print(f"Backend OK · models={r.get('models_count')} tools={r.get('tools_count')} capabilities={r.get('capabilities',[])}")
+    print(
+        f"Backend OK · models={r.get('models_count')} tools={r.get('tools_count')} capabilities={r.get('capabilities',[])}"
+    )
 
     test_rag()
     test_agent()
@@ -650,24 +703,30 @@ def main() -> int:
     return 0 if not failed else 1
 
 
-
-
 # ── pytest 集成 (auto) ────────────────────────────────────
 import base64 as _b64
 import sys as _sys
+
 import pytest as _pytest
-_MODULE_BODY = _b64.b64decode('IiIiCjgg6aG56IO95Yqb5a6h6K6hIEUyRSDmtYvor5UKCuimhuebljoKMS4gUkFHICAgICAgICjmlofmoaPkuIrkvKAgKyDmo4DntKIgKyDlvJXnlKgpCjIuIEFnZW50ICAgICAo5Y2VIGFnZW50IOW3peWFt+iwg+eUqCArIOWkmuWnlOa0vikKMy4gU2tpbGwgICAgIChza2lsbCDliJfooaggKyDmir3lj5YgKyDmiafooYwpCjQuIE1DUCAgICAgICAoc2VydmVyIENSVUQgKyDpooTorr4gKyBpbnZva2UgKyDlt6Xlhbfms6jlhozliLAgVG9vbFJlZ2lzdHJ5KQo1LiBDb250ZXh0ICAgKG1lbW9yeS9jb250ZXh0IOaMgeS5heWMlikKNi4gQ29UICAgICAgIChyZWFzb25pbmcvc2VxdWVudGlhbCDmgJ3nu7Tpk74gKyByZWZsZWN0aW9uICsgaHlwb3RoZXNpcykKNy4gVGhpbmtpbmcgIChlbmFibGVfdGhpbmtpbmcg5rex5bqm5oCd6ICD5qih5byPKQo4LiBDaGF0L0FnZW50IOWMuuWIhiAoL3YxL2NoYXQvY29tcGxldGlvbnMgdnMgL3YxL2FnZW50cy9ydW5zKQoK5q+P5Liq6IO95YqbIDQtNiDpobnnlKjkvoss5YWx57qmIDM1IOmhuSzlhajov4fmiY3nrpcgT0vjgIIKIiIiCkJBU0UgPSBvcy5nZXRlbnYoIkRBVEFfQUlfQkFTRSIsICJodHRwOi8vbG9jYWxob3N0OjgwMDAiKQpBUElfS0VZID0gb3MuZ2V0ZW52KCJEQVRBX0FJX0FQSV9LRVkiLCAic2stdGVzdC1wMS04IikKcGFzc2VkOiBsaXN0W3N0cl0gPSBbXQpmYWlsZWQ6IGxpc3RbdHVwbGVbc3RyLCBzdHJdXSA9IFtdCmlmIF9fbmFtZV9fID09ICJfX21haW5fXyI6CiAgICBzeXMuZXhpdChtYWluKCkpCg==').decode("utf-8")
+
+_MODULE_BODY = _b64.b64decode(
+    "IiIiCjgg6aG56IO95Yqb5a6h6K6hIEUyRSDmtYvor5UKCuimhuebljoKMS4gUkFHICAgICAgICjmlofmoaPkuIrkvKAgKyDmo4DntKIgKyDlvJXnlKgpCjIuIEFnZW50ICAgICAo5Y2VIGFnZW50IOW3peWFt+iwg+eUqCArIOWkmuWnlOa0vikKMy4gU2tpbGwgICAgIChza2lsbCDliJfooaggKyDmir3lj5YgKyDmiafooYwpCjQuIE1DUCAgICAgICAoc2VydmVyIENSVUQgKyDpooTorr4gKyBpbnZva2UgKyDlt6Xlhbfms6jlhozliLAgVG9vbFJlZ2lzdHJ5KQo1LiBDb250ZXh0ICAgKG1lbW9yeS9jb250ZXh0IOaMgeS5heWMlikKNi4gQ29UICAgICAgIChyZWFzb25pbmcvc2VxdWVudGlhbCDmgJ3nu7Tpk74gKyByZWZsZWN0aW9uICsgaHlwb3RoZXNpcykKNy4gVGhpbmtpbmcgIChlbmFibGVfdGhpbmtpbmcg5rex5bqm5oCd6ICD5qih5byPKQo4LiBDaGF0L0FnZW50IOWMuuWIhiAoL3YxL2NoYXQvY29tcGxldGlvbnMgdnMgL3YxL2FnZW50cy9ydW5zKQoK5q+P5Liq6IO95YqbIDQtNiDpobnnlKjkvoss5YWx57qmIDM1IOmhuSzlhajov4fmiY3nrpcgT0vjgIIKIiIiCkJBU0UgPSBvcy5nZXRlbnYoIkRBVEFfQUlfQkFTRSIsICJodHRwOi8vbG9jYWxob3N0OjgwMDAiKQpBUElfS0VZID0gb3MuZ2V0ZW52KCJEQVRBX0FJX0FQSV9LRVkiLCAic2stdGVzdC1wMS04IikKcGFzc2VkOiBsaXN0W3N0cl0gPSBbXQpmYWlsZWQ6IGxpc3RbdHVwbGVbc3RyLCBzdHJdXSA9IFtdCmlmIF9fbmFtZV9fID09ICJfX21haW5fXyI6CiAgICBzeXMuZXhpdChtYWluKCkpCg=="
+).decode("utf-8")
+
 
 def _run_module_body() -> None:
     """执行原顶层可执行代码, 把 ``sys.exit()`` 转成 ``SystemExit`` 异常."""
     _orig_exit = _sys.exit
+
     def _safe_exit(code=0):
         raise SystemExit(code)
+
     _sys.exit = _safe_exit
     try:
         exec(compile(_MODULE_BODY, __file__, "exec"), globals())
     finally:
         _sys.exit = _orig_exit
+
 
 if __name__ == "__main__":
     _run_module_body()

@@ -70,7 +70,9 @@ class ChatCompletionRequest(BaseModel):
     tool_names: list[str] | None = Field(None, description="指定可用工具列表")
     # 企业角色预设:P0-3 — 让请求者直接套客服/财务/秘书/小说 4 套预置 Agent
     # 设为 None / 未知值 时不生效,等价于通用 Agent
-    role: str | None = Field(None, description="企业角色预设: customer_service | finance_analyst | secretary | novel_writer")
+    role: str | None = Field(
+        None, description="企业角色预设: customer_service | finance_analyst | secretary | novel_writer"
+    )
 
 
 class ChatCompletionChoice(BaseModel):
@@ -91,7 +93,9 @@ class ChatCompletionResponse(BaseModel):
     choices: list[ChatCompletionChoice] = Field(..., description="选择列表")
     usage: dict[str, int] = Field(default_factory=dict, description="token使用量")
     # Agent 扩展(透传 OpenAI 客户端,前端可读)
-    agent_trace: dict[str, Any] | None = Field(default=None, description="Agent 执行 trace: iterations/tool_calls/reflections")
+    agent_trace: dict[str, Any] | None = Field(
+        default=None, description="Agent 执行 trace: iterations/tool_calls/reflections"
+    )
     tool_calls: list[dict[str, Any]] = Field(default_factory=list, description="工具调用历史(平铺)")
     reflections: list[dict[str, Any]] = Field(default_factory=list, description="Self-Reflection 历史(平铺)")
 
@@ -350,6 +354,7 @@ def _resolve_preset(role: str | None) -> dict[str, Any] | None:
 async def lifespan(app: FastAPI):
     """应用生命周期管理"""
     import time as _t
+
     app.state.start_time = _t.time()  # P1-7: 启动时间用于 uptime 计算
     logger.info("API server starting up...")
 
@@ -601,6 +606,7 @@ async def lifespan(app: FastAPI):
     # 显式注册办公文档工具（office 模块只暴露函数，需要主动调用 register_office_tools）
     try:
         from data_ai.core.tool.office import register_office_tools
+
         register_office_tools()
     except Exception as e:
         logger.debug(f"register_office_tools skipped: {e}")
@@ -620,6 +626,7 @@ async def lifespan(app: FastAPI):
         # 用同步包装跑 async handler,通过 _asyncio.run_coroutine_threadsafe 在新 loop 跑
         try:
             from data_ai.core.tool.registry import get_tool_registry as _gtr
+
             in_proc = get_in_process_server()
             tr = _gtr()
 
@@ -631,6 +638,7 @@ async def lifespan(app: FastAPI):
                         if loop.is_running():
                             # 在新线程跑,避免 nested loop 报错
                             import concurrent.futures as _cf
+
                             with _cf.ThreadPoolExecutor(max_workers=1) as ex:
                                 fut = ex.submit(_asyncio.run, coro)
                                 return fut.result(timeout=10)
@@ -638,6 +646,7 @@ async def lifespan(app: FastAPI):
                             return loop.run_until_complete(coro)
                     except RuntimeError:
                         return _asyncio.run(coro)
+
                 return _handler
 
             for tool in in_proc.list_tools():
@@ -737,6 +746,7 @@ except Exception:  # noqa: BLE001
 
 def _gen_trace_id() -> str:
     import uuid
+
     return uuid.uuid4().hex[:12]
 
 
@@ -903,6 +913,7 @@ async def health_check():
     - /health/ready 服务就绪 (k8s readiness,会主动 ping LLM)
     """
     import uuid
+
     trace_id = uuid.uuid4().hex[:12]
     checks: dict[str, dict] = {}
     components: dict[str, str] = {}
@@ -951,12 +962,14 @@ async def health_check():
         "ANTHROPIC_API_KEY_set": bool(os.getenv("ANTHROPIC_API_KEY")),
         "DEEPSEEK_API_KEY_set": bool(os.getenv("DEEPSEEK_API_KEY")),
     }
-    any_key = any([
-        env_checks["DASHSCOPE_API_KEY_set"],
-        env_checks["OPENAI_API_KEY_set"],
-        env_checks["ANTHROPIC_API_KEY_set"],
-        env_checks["DEEPSEEK_API_KEY_set"],
-    ])
+    any_key = any(
+        [
+            env_checks["DASHSCOPE_API_KEY_set"],
+            env_checks["OPENAI_API_KEY_set"],
+            env_checks["ANTHROPIC_API_KEY_set"],
+            env_checks["DEEPSEEK_API_KEY_set"],
+        ]
+    )
     checks["environment"] = {
         "ok": any_key,
         "details": env_checks,
@@ -1009,11 +1022,17 @@ async def health_ready():
     503 = 未就绪,k8s 不应路由流量
     """
     import uuid
+
     trace_id = uuid.uuid4().hex[:12]
     try:
         llm_manager: LLMManager = app.state.llm_manager
         models = llm_manager.list_models() if hasattr(llm_manager, "list_models") else []
-        any_key = bool(os.getenv("DASHSCOPE_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY") or os.getenv("DEEPSEEK_API_KEY"))
+        any_key = bool(
+            os.getenv("DASHSCOPE_API_KEY")
+            or os.getenv("OPENAI_API_KEY")
+            or os.getenv("ANTHROPIC_API_KEY")
+            or os.getenv("DEEPSEEK_API_KEY")
+        )
         if not models:
             return JSONResponse(
                 status_code=503,
@@ -1398,7 +1417,7 @@ async def chat_completions(
                             if content == accumulated:
                                 continue
                             if content.startswith(accumulated):
-                                content = content[len(accumulated):]
+                                content = content[len(accumulated) :]
                                 if not content:
                                     continue
                         accumulated += content
@@ -1465,13 +1484,11 @@ async def chat_completions(
                 # 关键修复：把整个对话历史传给 agent.run()，而不是只传最后一条 query。
                 # 这样 LLM 在多轮 tool 调用中能"记住"前面对话（long-conversation memory）。
                 # messages 第一条是 [system, locale_instruction]（如有），把 locale 提到 agent system 即可避免重复。
-                history_for_agent = [
-                    m for m in messages
-                    if m.content and m.content != locale_instruction
-                ]
+                history_for_agent = [m for m in messages if m.content and m.content != locale_instruction]
                 # 去掉已合并到 agent_system 的 user system
                 history_for_agent = [
-                    m for m in history_for_agent
+                    m
+                    for m in history_for_agent
                     if not (m.role == "system" and user_system and m.content == user_system)
                 ]
                 agent_response: dict[str, Any] = await agent.run(query, initial_messages=history_for_agent)
@@ -1731,6 +1748,7 @@ def run_server(
     import time as _time
 
     import uvicorn
+
     _os.environ["_DATA_AI_STARTED_AT"] = str(_time.time())
 
     uvicorn.run(

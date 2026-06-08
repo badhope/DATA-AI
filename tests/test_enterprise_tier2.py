@@ -281,7 +281,15 @@ class TestBilling:
         from data_ai.core.billing import BillingEngine, Budget
 
         e = BillingEngine(persist_path=tmp_path / "b.jsonl")
-        b = Budget(name="hard", scope="tenant", scope_id="t2", period="monthly", amount_usd=1, hard_limit=True, warn_threshold=0.5)
+        b = Budget(
+            name="hard",
+            scope="tenant",
+            scope_id="t2",
+            period="monthly",
+            amount_usd=1,
+            hard_limit=True,
+            warn_threshold=0.5,
+        )
         e.set_budget(b)
         e.set_pricing("p", input_per_1k=0.001, output_per_1k=0)
         for _ in range(50):

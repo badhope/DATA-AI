@@ -220,9 +220,7 @@ class ReplicationEngine:
 
     # ---- stream operations ----
 
-    def list_streams(
-        self, policy_id: str = "", state: StreamState | None = None
-    ) -> list[ReplicaStream]:
+    def list_streams(self, policy_id: str = "", state: StreamState | None = None) -> list[ReplicaStream]:
         with self._lock:
             out: list[ReplicaStream] = []
             for s in self._streams.values():
@@ -236,9 +234,7 @@ class ReplicationEngine:
     def get_stream(self, stream_id: str) -> ReplicaStream | None:
         return self._streams.get(stream_id)
 
-    def record_sync(
-        self, stream_id: str, records: int, bytes_sent: int, lag_sec: float = 0.0
-    ) -> ReplicaStream:
+    def record_sync(self, stream_id: str, records: int, bytes_sent: int, lag_sec: float = 0.0) -> ReplicaStream:
         """记录一次成功的同步"""
         with self._lock:
             s = self._streams.get(stream_id)
@@ -402,9 +398,7 @@ class ReplicationEngine:
 
     # ---- network partition guard ----
 
-    def check_quorum(
-        self, region: str, total_replicas: int, reachable_replicas: int
-    ) -> dict[str, Any]:
+    def check_quorum(self, region: str, total_replicas: int, reachable_replicas: int) -> dict[str, Any]:
         """Quorum 检查: 防止脑裂写入"""
         if total_replicas <= 0:
             return {"ok": False, "reason": "no_replicas_configured", "can_write": False}
@@ -457,9 +451,7 @@ class ReplicationEngine:
                 "streams": {k: v.to_dict() for k, v in self._streams.items()},
                 "failovers": {k: v.to_dict() for k, v in self._failovers.items()},
             }
-            self._persist_path.write_text(
-                json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
-            )
+            self._persist_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         except Exception:
             pass
 

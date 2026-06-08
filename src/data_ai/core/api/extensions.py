@@ -116,6 +116,7 @@ class AgentRunPayload(BaseModel):
 
 class AgentDelegateManyPayload(BaseModel):
     """P1-7: 委派多个 sub-agent"""
+
     queries: list[dict[str, Any]] = Field(..., description="每个 sub-task: {query, role?, run_id?}")
     model: str | None = Field(default=None, description="统一模型 (缺省 qwen-turbo)")
 
@@ -325,6 +326,7 @@ class SkillExtractPayload(BaseModel):
 
 # ---------- MCP ----------
 
+
 class MCPServerCreatePayload(BaseModel):
     id: str | None = None
     name: str
@@ -438,6 +440,7 @@ async def list_llm_providers():
         LLMManager,
         ModelProvider,
     )
+
     llm_mgr: LLMManager = _server_app.state.llm_manager
     registered = {
         m_id: {
@@ -616,6 +619,7 @@ async def list_all_agent_runs(request: Request, status: str | None = None, limit
     """
     try:
         from data_ai.core.agent.checkpoint import get_checkpoint_store
+
         store = get_checkpoint_store()
         runs = await store.list_runs(status=status, limit=limit)
     except Exception as exc:  # pragma: no cover
@@ -649,6 +653,7 @@ async def get_agent_run(request: Request, run_id: str):
     """
     try:
         from data_ai.core.agent.checkpoint import get_checkpoint_store
+
         store = get_checkpoint_store()
         ck = await store.load(run_id)
     except Exception as exc:  # pragma: no cover
@@ -828,15 +833,17 @@ async def list_sub_runs(request: Request, run_id: str):
     for ck in all_cks:
         parent = (ck.metadata or {}).get("parent_run_id")
         if parent == run_id:
-            sub_runs.append({
-                "run_id": ck.run_id,
-                "status": ck.status,
-                "preset_role": (ck.metadata or {}).get("preset_role"),
-                "created_at": ck.created_at,
-                "updated_at": ck.updated_at,
-                "iterations": ck.iteration_count,
-                "has_error": bool(ck.error),
-            })
+            sub_runs.append(
+                {
+                    "run_id": ck.run_id,
+                    "status": ck.status,
+                    "preset_role": (ck.metadata or {}).get("preset_role"),
+                    "created_at": ck.created_at,
+                    "updated_at": ck.updated_at,
+                    "iterations": ck.iteration_count,
+                    "has_error": bool(ck.error),
+                }
+            )
     # 按 created_at 升序(子任务先后顺序)
     sub_runs.sort(key=lambda r: r["created_at"])
     return {
@@ -965,11 +972,13 @@ def _list_presets() -> list[dict[str, Any]]:
     """返回 4 个企业 Agent 预设的简要元信息。"""
     try:
         from data_ai.plugins.agents import list_presets
+
         items = list_presets()
         # list_presets() 内部已经返回 {role, name, description, tools_count}
         # 这里补一层 max_iterations / temperature / reflection / tools 摘要
         try:
             from data_ai.plugins.agents import REGISTERED_PRESETS
+
             for item in items:
                 p = REGISTERED_PRESETS.get(item["role"])
                 if p:
@@ -1058,6 +1067,7 @@ async def create_agent(payload: AgentCreatePayload):
     if payload.preset:
         try:
             from data_ai.plugins.agents import get_preset
+
             preset_def = get_preset(payload.preset)
         except Exception as exc:  # pragma: no cover
             logger.error(f"create_agent: preset 解析失败 err={exc!r}")
@@ -1128,6 +1138,7 @@ async def update_agent(request: Request, agent_id: str, payload: AgentUpdatePayl
         if "preset" in data and data["preset"]:
             try:
                 from data_ai.plugins.agents import get_preset
+
                 preset_def = get_preset(data["preset"])
             except Exception as exc:  # pragma: no cover
                 logger.error(f"update_agent: preset 解析失败 err={exc!r}")
@@ -1165,6 +1176,7 @@ async def delegate_many(request: Request, payload: AgentDelegateManyPayload):
     每个 sub-task 独立跑,一个失败不影响其他,失败的会带 trace_id + error_class
     """
     import uuid as _uuid
+
     trace_id = _uuid.uuid4().hex[:12]
     llm_manager = request.app.state.llm_manager
     tool_registry = request.app.state.tool_registry
@@ -1203,7 +1215,9 @@ async def delegate_many(request: Request, payload: AgentDelegateManyPayload):
         )
 
     model_name = payload.model or "qwen-turbo"
-    if not hasattr(llm_manager, "_clients") or model_name not in (llm_manager._clients if hasattr(llm_manager, "_clients") else {}):
+    if not hasattr(llm_manager, "_clients") or model_name not in (
+        llm_manager._clients if hasattr(llm_manager, "_clients") else {}
+    ):
         # fallback 到 default
         if hasattr(llm_manager, "get_default_model"):
             default = llm_manager.get_default_model()
@@ -2184,7 +2198,9 @@ async def restore_snapshot(request: Request, sandbox_id: str, name: str):
     return {"restored": name}
 
 
-@router.delete("/v1/sandboxes/{sandbox_id}/snapshots/{name}", status_code=204, response_class=Response, response_model=None)
+@router.delete(
+    "/v1/sandboxes/{sandbox_id}/snapshots/{name}", status_code=204, response_class=Response, response_model=None
+)
 async def delete_snapshot(request: Request, sandbox_id: str, name: str):
     with STORE.lock():
         sbx = STORE.sandboxes.get(sandbox_id)
@@ -2620,6 +2636,7 @@ def _mcp_registry(request: Request):
     reg = getattr(request.app.state, "mcp_registry", None)
     if reg is None:
         from data_ai.core.mcp import get_mcp_registry, load_builtin_servers
+
         reg = get_mcp_registry()
         load_builtin_servers(reg)
         request.app.state.mcp_registry = reg
@@ -2649,6 +2666,7 @@ async def list_mcp_servers(request: Request, include_tools: bool = False):
 async def list_mcp_presets():
     """列出 mcp_schema.json 中预置的 builtin server 配置(可一键 install)"""
     from data_ai.core.mcp.server import BUILTIN_MCP_SERVERS
+
     return {
         "object": "list",
         "data": BUILTIN_MCP_SERVERS,
@@ -2689,6 +2707,7 @@ async def create_mcp_server(request: Request, payload: MCPServerCreatePayload):
 async def install_mcp_preset(request: Request, preset_id: str):
     """一键启用 builtin preset(比如把 mcp-filesystem 从 inactive → active)"""
     from data_ai.core.mcp.server import BUILTIN_MCP_SERVERS
+
     reg = _mcp_registry(request)
     target = next((s for s in BUILTIN_MCP_SERVERS if s["id"] == preset_id), None)
     if not target:
@@ -2731,7 +2750,9 @@ async def update_mcp_server(request: Request, server_id: str, payload: MCPServer
     return updated.to_dict()
 
 
-@router.delete("/v1/mcp/servers/{server_id}", status_code=204, tags=["MCP"], response_class=Response, response_model=None)
+@router.delete(
+    "/v1/mcp/servers/{server_id}", status_code=204, tags=["MCP"], response_class=Response, response_model=None
+)
 async def delete_mcp_server(request: Request, server_id: str):
     reg = _mcp_registry(request)
     if reg.get_server(server_id) is None:
@@ -3323,12 +3344,8 @@ def audit_export(
     store = get_audit_store()
     items = store.query(actor=actor, action=action, limit=10000)
     if fmt == "csv":
-        return JSONResponse(
-            content={"format": "csv", "data": store.export_csv(items), "count": len(items)}
-        )
-    return JSONResponse(
-        content={"format": "json", "data": store.export_json(items), "count": len(items)}
-    )
+        return JSONResponse(content={"format": "csv", "data": store.export_csv(items), "count": len(items)})
+    return JSONResponse(content={"format": "json", "data": store.export_json(items), "count": len(items)})
 
 
 @router.delete("/v1/audit", tags=["Audit"], status_code=204, response_class=Response, response_model=None)
@@ -3363,7 +3380,13 @@ def quota_policies_create(payload: QuotaPolicyPayload) -> dict:
     return {"policy": get_quota_manager().get_policy(policy.scope, policy.scope_id)}
 
 
-@router.delete("/v1/quota/policies/{scope}/{scope_id}", status_code=204, tags=["Quota"], response_class=Response, response_model=None)
+@router.delete(
+    "/v1/quota/policies/{scope}/{scope_id}",
+    status_code=204,
+    tags=["Quota"],
+    response_class=Response,
+    response_model=None,
+)
 def quota_policies_delete(scope: str, scope_id: str) -> None:
     get_quota_manager().delete_policy(scope, scope_id)
 
@@ -3459,7 +3482,9 @@ def webhooks_update(sub_id: str, payload: WebhookUpdatePayload) -> dict:
     return {"subscription": sub.to_dict()}
 
 
-@router.delete("/v1/webhooks/{sub_id}", status_code=204, tags=["Webhooks"], response_class=Response, response_model=None)
+@router.delete(
+    "/v1/webhooks/{sub_id}", status_code=204, tags=["Webhooks"], response_class=Response, response_model=None
+)
 def webhooks_delete(sub_id: str) -> None:
     get_webhook_dispatcher().delete(sub_id)
 
@@ -3623,9 +3648,13 @@ def tenants_create(payload: TenantCreatePayload) -> dict:
 
     try:
         t = get_tenant_store().create(
-            name=payload.name, slug=payload.slug or "", plan=payload.plan,  # type: ignore[arg-type]
-            region=payload.region, contact_email=payload.contact_email,
-            limits=payload.limits, metadata=payload.metadata,
+            name=payload.name,
+            slug=payload.slug or "",
+            plan=payload.plan,  # type: ignore[arg-type]
+            region=payload.region,
+            contact_email=payload.contact_email,
+            limits=payload.limits,
+            metadata=payload.metadata,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -3654,7 +3683,9 @@ def tenants_update(tenant_id: str, payload: TenantUpdatePayload) -> dict:
     return {"tenant": t.to_dict()}
 
 
-@router.delete("/v1/tenants/{tenant_id}", status_code=204, tags=["Tenants"], response_class=Response, response_model=None)
+@router.delete(
+    "/v1/tenants/{tenant_id}", status_code=204, tags=["Tenants"], response_class=Response, response_model=None
+)
 def tenants_delete(tenant_id: str) -> None:
     from data_ai.core.tenants import get_tenant_store
 
@@ -3697,7 +3728,13 @@ def tenants_add_member(tenant_id: str, payload: TenantMemberPayload) -> dict:
     return {"member": m.to_dict()}
 
 
-@router.delete("/v1/tenants/{tenant_id}/members/{user_id}", status_code=204, tags=["Tenants"], response_class=Response, response_model=None)
+@router.delete(
+    "/v1/tenants/{tenant_id}/members/{user_id}",
+    status_code=204,
+    tags=["Tenants"],
+    response_class=Response,
+    response_model=None,
+)
 def tenants_remove_member(tenant_id: str, user_id: str) -> None:
     from data_ai.core.tenants import get_tenant_store
 
@@ -3767,8 +3804,11 @@ def rbac_create_role(payload: RoleCreatePayload) -> dict:
     perms = [Permission(**p) for p in payload.permissions]
     try:
         r = get_rbac_engine().create_role(
-            name=payload.name, permissions=perms, parent_roles=payload.parent_roles,
-            tenant_id=payload.tenant_id, description=payload.description,
+            name=payload.name,
+            permissions=perms,
+            parent_roles=payload.parent_roles,
+            tenant_id=payload.tenant_id,
+            description=payload.description,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -3805,13 +3845,20 @@ def rbac_create_policy(payload: PolicyCreatePayload) -> dict:
     from data_ai.core.rbac import get_rbac_engine
 
     p = get_rbac_engine().create_policy(
-        name=payload.name, conditions=payload.conditions, effect=payload.effect,  # type: ignore[arg-type]
-        priority=payload.priority, tenant_id=payload.tenant_id, enabled=payload.enabled, description=payload.description,
+        name=payload.name,
+        conditions=payload.conditions,
+        effect=payload.effect,  # type: ignore[arg-type]
+        priority=payload.priority,
+        tenant_id=payload.tenant_id,
+        enabled=payload.enabled,
+        description=payload.description,
     )
     return {"policy": p.to_dict()}
 
 
-@router.delete("/v1/rbac/policies/{policy_id}", status_code=204, tags=["RBAC"], response_class=Response, response_model=None)
+@router.delete(
+    "/v1/rbac/policies/{policy_id}", status_code=204, tags=["RBAC"], response_class=Response, response_model=None
+)
 def rbac_delete_policy(policy_id: str) -> None:
     from data_ai.core.rbac import get_rbac_engine
 
@@ -3823,7 +3870,9 @@ def rbac_delete_policy(policy_id: str) -> None:
 def rbac_list_assignments(user_id: str = "", tenant_id: str = "") -> dict:
     from data_ai.core.rbac import get_rbac_engine
 
-    return {"assignments": [a.to_dict() for a in get_rbac_engine().list_assignments(user_id=user_id, tenant_id=tenant_id)]}
+    return {
+        "assignments": [a.to_dict() for a in get_rbac_engine().list_assignments(user_id=user_id, tenant_id=tenant_id)]
+    }
 
 
 @router.post("/v1/rbac/assignments", status_code=201, tags=["RBAC"])
@@ -3831,8 +3880,11 @@ def rbac_assign(payload: AssignmentPayload) -> dict:
     from data_ai.core.rbac import get_rbac_engine
 
     a = get_rbac_engine().assign(
-        user_id=payload.user_id, role_id=payload.role_id, tenant_id=payload.tenant_id,
-        granted_by=payload.granted_by, expires_at=payload.expires_at,
+        user_id=payload.user_id,
+        role_id=payload.role_id,
+        tenant_id=payload.tenant_id,
+        granted_by=payload.granted_by,
+        expires_at=payload.expires_at,
     )
     return {"assignment": a.to_dict()}
 
@@ -3849,8 +3901,12 @@ def rbac_check(payload: RbacCheckPayload) -> dict:
     from data_ai.core.rbac import get_rbac_engine
 
     d = get_rbac_engine().check(
-        user_id=payload.user_id, resource=payload.resource, action=payload.action,
-        tenant_id=payload.tenant_id, env=payload.env, resource_ctx=payload.resource_ctx,
+        user_id=payload.user_id,
+        resource=payload.resource,
+        action=payload.action,
+        tenant_id=payload.tenant_id,
+        env=payload.env,
+        resource_ctx=payload.resource_ctx,
     )
     return {"decision": d.to_dict()}
 
@@ -3942,8 +3998,10 @@ def billing_set_pricing(payload: PricingPayload) -> dict:
     from data_ai.core.billing import get_billing_engine
 
     p = get_billing_engine().set_pricing(
-        model_id=payload.model_id, input_per_1k=payload.input_per_1k,
-        output_per_1k=payload.output_per_1k, cached_input_per_1k=payload.cached_input_per_1k,
+        model_id=payload.model_id,
+        input_per_1k=payload.input_per_1k,
+        output_per_1k=payload.output_per_1k,
+        cached_input_per_1k=payload.cached_input_per_1k,
         currency=payload.currency,
     )
     return {"pricing": p.to_dict()}
@@ -3954,10 +4012,16 @@ def billing_record_usage(payload: UsageRecordPayload) -> dict:
     from data_ai.core.billing import get_billing_engine
 
     r = get_billing_engine().record(
-        tenant_id=payload.tenant_id, user_id=payload.user_id, cost_center_id=payload.cost_center_id,
-        project=payload.project, resource_type=payload.resource_type, resource_id=payload.resource_id,
-        model_id=payload.model_id, prompt_tokens=payload.prompt_tokens,
-        completion_tokens=payload.completion_tokens, cached_tokens=payload.cached_tokens,
+        tenant_id=payload.tenant_id,
+        user_id=payload.user_id,
+        cost_center_id=payload.cost_center_id,
+        project=payload.project,
+        resource_type=payload.resource_type,
+        resource_id=payload.resource_id,
+        model_id=payload.model_id,
+        prompt_tokens=payload.prompt_tokens,
+        completion_tokens=payload.completion_tokens,
+        cached_tokens=payload.cached_tokens,
     )
     return {"record": r.to_dict()}
 
@@ -3972,7 +4036,14 @@ def billing_list_usage(
 ) -> dict:
     from data_ai.core.billing import get_billing_engine
 
-    return {"records": [r.to_dict() for r in get_billing_engine().list_records(tenant_id=tenant_id, cost_center_id=cost_center_id, since=since, until=until, limit=limit)]}
+    return {
+        "records": [
+            r.to_dict()
+            for r in get_billing_engine().list_records(
+                tenant_id=tenant_id, cost_center_id=cost_center_id, since=since, until=until, limit=limit
+            )
+        ]
+    }
 
 
 @router.get("/v1/billing/budgets", tags=["Billing"])
@@ -3987,15 +4058,21 @@ def billing_set_budget(payload: BudgetPayload) -> dict:
     from data_ai.core.billing import Budget, get_billing_engine
 
     b = Budget(
-        name=payload.name, scope=payload.scope, scope_id=payload.scope_id,
+        name=payload.name,
+        scope=payload.scope,
+        scope_id=payload.scope_id,
         period=payload.period,  # type: ignore[arg-type]
-        amount_usd=payload.amount_usd, hard_limit=payload.hard_limit,
-        warn_threshold=payload.warn_threshold, enabled=payload.enabled,
+        amount_usd=payload.amount_usd,
+        hard_limit=payload.hard_limit,
+        warn_threshold=payload.warn_threshold,
+        enabled=payload.enabled,
     )
     return {"budget": get_billing_engine().set_budget(b).to_dict()}
 
 
-@router.delete("/v1/billing/budgets/{budget_id}", status_code=204, tags=["Billing"], response_class=Response, response_model=None)
+@router.delete(
+    "/v1/billing/budgets/{budget_id}", status_code=204, tags=["Billing"], response_class=Response, response_model=None
+)
 def billing_delete_budget(budget_id: str) -> None:
     from data_ai.core.billing import get_billing_engine
 
@@ -4015,8 +4092,11 @@ def billing_add_cost_center(payload: CostCenterPayload) -> dict:
     from data_ai.core.billing import CostCenter, get_billing_engine
 
     c = CostCenter(
-        tenant_id=payload.tenant_id, name=payload.name, code=payload.code,
-        parent_id=payload.parent_id, manager_user_id=payload.manager_user_id,
+        tenant_id=payload.tenant_id,
+        name=payload.name,
+        code=payload.code,
+        parent_id=payload.parent_id,
+        manager_user_id=payload.manager_user_id,
         monthly_budget_usd=payload.monthly_budget_usd,
     )
     return {"cost_center": get_billing_engine().add_cost_center(c).to_dict()}
@@ -4031,10 +4111,14 @@ def billing_budget_check(tenant_id: str = "", cost_center_id: str = "") -> dict:
 
 
 @router.get("/v1/billing/invoice", tags=["Billing"])
-def billing_invoice(tenant_id: str = Query(...), since: float = Query(...), until: float = Query(...), format: str = "json") -> dict:
+def billing_invoice(
+    tenant_id: str = Query(...), since: float = Query(...), until: float = Query(...), format: str = "json"
+) -> dict:
     from data_ai.core.billing import get_billing_engine
 
-    return {"invoice": get_billing_engine().export_invoice(tenant_id=tenant_id, since=since, until=until, format=format)}
+    return {
+        "invoice": get_billing_engine().export_invoice(tenant_id=tenant_id, since=since, until=until, format=format)
+    }
 
 
 # ---------- SLA 监控 + 状态页 ----------
@@ -4134,8 +4218,10 @@ def sla_open_incident(payload: IncidentPayload) -> dict:
     from data_ai.core.sla import IncidentSeverity, get_sla_monitor
 
     inc = get_sla_monitor().open_incident(
-        title=payload.title, severity=IncidentSeverity(payload.severity),
-        affected_components=payload.affected_components, message=payload.message,
+        title=payload.title,
+        severity=IncidentSeverity(payload.severity),
+        affected_components=payload.affected_components,
+        message=payload.message,
     )
     return {"incident": inc.to_dict()}
 
@@ -4145,8 +4231,10 @@ def sla_update_incident(incident_id: str, payload: IncidentUpdatePayload) -> dic
     from data_ai.core.sla import IncidentStatus, get_sla_monitor
 
     inc = get_sla_monitor().update_incident(
-        incident_id, status=IncidentStatus(payload.status),
-        message=payload.message, by=payload.by,
+        incident_id,
+        status=IncidentStatus(payload.status),
+        message=payload.message,
+        by=payload.by,
     )
     if not inc:
         raise HTTPException(status_code=404, detail="incident not found")
@@ -4255,8 +4343,12 @@ def sso_complete_login(idp_id: str = Query(...), payload: LoginCompletePayload =
     ip = request.client.host if request and request.client else ""
     ua = request.headers.get("user-agent", "") if request else ""
     result = get_sso_engine().complete_login(
-        idp_id=idp_id, code=payload.code, redirect_uri=payload.redirect_uri,
-        tenant_id=payload.tenant_id, ip=ip, user_agent=ua,
+        idp_id=idp_id,
+        code=payload.code,
+        redirect_uri=payload.redirect_uri,
+        tenant_id=payload.tenant_id,
+        ip=ip,
+        user_agent=ua,
     )
     if not result.get("ok"):
         raise HTTPException(status_code=400, detail=result.get("error", "login failed"))
@@ -4289,13 +4381,17 @@ def sso_upsert_scim_user(payload: ScimUserPayload) -> dict:
     from data_ai.core.sso import get_sso_engine
 
     u = get_sso_engine().scim.upsert_user(
-        user_name=payload.user_name, display_name=payload.display_name,
-        active=payload.active, groups=payload.groups,
+        user_name=payload.user_name,
+        display_name=payload.display_name,
+        active=payload.active,
+        groups=payload.groups,
     )
     return {"user": u.to_dict()}
 
 
-@router.delete("/v1/sso/scim/users/{user_name}", status_code=204, tags=["SSO"], response_class=Response, response_model=None)
+@router.delete(
+    "/v1/sso/scim/users/{user_name}", status_code=204, tags=["SSO"], response_class=Response, response_model=None
+)
 def sso_deactivate_scim_user(user_name: str) -> None:
     from data_ai.core.sso import get_sso_engine
 
@@ -4381,7 +4477,13 @@ def residency_add_policy(payload: ResidencyPolicyPayload) -> dict:
     return {"policy": get_residency_router().add_policy(p).to_dict()}
 
 
-@router.delete("/v1/residency/policies/{policy_id}", status_code=204, tags=["Residency"], response_class=Response, response_model=None)
+@router.delete(
+    "/v1/residency/policies/{policy_id}",
+    status_code=204,
+    tags=["Residency"],
+    response_class=Response,
+    response_model=None,
+)
 def residency_delete_policy(policy_id: str) -> None:
     from data_ai.core.residency import get_residency_router
 
@@ -4394,14 +4496,18 @@ def residency_route(payload: ResidencyRoutePayload) -> dict:
     from data_ai.core.residency import get_residency_router
 
     a = get_residency_router().route(
-        resource_id=payload.resource_id, data_class=payload.data_class,  # type: ignore[arg-type]
-        tenant_id=payload.tenant_id, prefer_region=payload.prefer_region,
+        resource_id=payload.resource_id,
+        data_class=payload.data_class,  # type: ignore[arg-type]
+        tenant_id=payload.tenant_id,
+        prefer_region=payload.prefer_region,
     )
     return {"assignment": a.to_dict()}
 
 
 @router.post("/v1/residency/can-transfer", tags=["Residency"])
-def residency_can_transfer(resource_id: str = Query(...), from_region: str = Query(...), to_region: str = Query(...)) -> dict:
+def residency_can_transfer(
+    resource_id: str = Query(...), from_region: str = Query(...), to_region: str = Query(...)
+) -> dict:
     from data_ai.core.residency import get_residency_router
 
     ok, reason = get_residency_router().can_transfer(resource_id, from_region, to_region)
@@ -4409,10 +4515,17 @@ def residency_can_transfer(resource_id: str = Query(...), from_region: str = Que
 
 
 @router.get("/v1/residency/assignments", tags=["Residency"])
-def residency_list_assignments(tenant_id: str = "", data_class: str | None = None, limit: int = Query(100, ge=1, le=1000)) -> dict:
+def residency_list_assignments(
+    tenant_id: str = "", data_class: str | None = None, limit: int = Query(100, ge=1, le=1000)
+) -> dict:
     from data_ai.core.residency import get_residency_router
 
-    return {"assignments": [a.to_dict() for a in get_residency_router().list_assignments(tenant_id=tenant_id, data_class=data_class, limit=limit)]}
+    return {
+        "assignments": [
+            a.to_dict()
+            for a in get_residency_router().list_assignments(tenant_id=tenant_id, data_class=data_class, limit=limit)
+        ]
+    }
 
 
 # ---------- 审计链 (Merkle) ----------
@@ -4519,9 +4632,12 @@ def replication_list_policies(
     from data_ai.core.replication import get_replication_engine
 
     return {
-        "policies": [p.to_dict() for p in get_replication_engine().list_policies(
-            source_region=source_region, target_region=target_region, enabled=enabled
-        )]
+        "policies": [
+            p.to_dict()
+            for p in get_replication_engine().list_policies(
+                source_region=source_region, target_region=target_region, enabled=enabled
+            )
+        ]
     }
 
 
@@ -4553,7 +4669,13 @@ def replication_get_policy(policy_id: str) -> dict:
     return {"policy": p.to_dict()}
 
 
-@router.delete("/v1/replication/policies/{policy_id}", status_code=204, tags=["Replication"], response_class=Response, response_model=None)
+@router.delete(
+    "/v1/replication/policies/{policy_id}",
+    status_code=204,
+    tags=["Replication"],
+    response_class=Response,
+    response_model=None,
+)
 def replication_delete_policy(policy_id: str) -> None:
     from data_ai.core.replication import get_replication_engine
 
@@ -4794,7 +4916,13 @@ def recovery_get_schedule(schedule_id: str) -> dict:
     return {"schedule": s.to_dict()}
 
 
-@router.delete("/v1/recovery/schedules/{schedule_id}", status_code=204, tags=["Recovery"], response_class=Response, response_model=None)
+@router.delete(
+    "/v1/recovery/schedules/{schedule_id}",
+    status_code=204,
+    tags=["Recovery"],
+    response_class=Response,
+    response_model=None,
+)
 def recovery_delete_schedule(schedule_id: str) -> None:
     from data_ai.core.recovery import get_recovery_engine
 
@@ -4825,9 +4953,12 @@ def recovery_list_backups(
     from data_ai.core.recovery import BackupStatus, get_recovery_engine
 
     st = BackupStatus(status) if status else None
-    return {"backups": [b.to_dict() for b in get_recovery_engine().list_backups(
-        schedule_id=schedule_id, status=st, region=region, limit=limit
-    )]}
+    return {
+        "backups": [
+            b.to_dict()
+            for b in get_recovery_engine().list_backups(schedule_id=schedule_id, status=st, region=region, limit=limit)
+        ]
+    }
 
 
 @router.get("/v1/recovery/backups/{backup_id}", tags=["Recovery"])
@@ -4892,9 +5023,11 @@ def recovery_list_restores(
     from data_ai.core.recovery import RestoreStatus, get_recovery_engine
 
     st = RestoreStatus(status) if status else None
-    return {"restores": [j.to_dict() for j in get_recovery_engine().list_restores(
-        backup_id=backup_id, status=st, limit=limit
-    )]}
+    return {
+        "restores": [
+            j.to_dict() for j in get_recovery_engine().list_restores(backup_id=backup_id, status=st, limit=limit)
+        ]
+    }
 
 
 @router.post("/v1/recovery/drill", status_code=201, tags=["Recovery"])
@@ -4948,9 +5081,14 @@ def recovery_list_holds(
 ) -> dict:
     from data_ai.core.recovery import get_recovery_engine
 
-    return {"holds": [h.to_dict() for h in get_recovery_engine().list_holds(
-        resource_id=resource_id, regulation=regulation, active_only=active_only
-    )]}
+    return {
+        "holds": [
+            h.to_dict()
+            for h in get_recovery_engine().list_holds(
+                resource_id=resource_id, regulation=regulation, active_only=active_only
+            )
+        ]
+    }
 
 
 @router.get("/v1/recovery/check-action", tags=["Recovery"])
@@ -5074,9 +5212,11 @@ def compensation_list_breaches(
     from data_ai.core.sla import BreachSeverity, get_compensation_engine
 
     sev = BreachSeverity(severity) if severity else None
-    return {"breaches": [b.to_dict() for b in get_compensation_engine().list_breaches(
-        tenant_id=tenant_id, severity=sev, limit=limit
-    )]}
+    return {
+        "breaches": [
+            b.to_dict() for b in get_compensation_engine().list_breaches(tenant_id=tenant_id, severity=sev, limit=limit)
+        ]
+    }
 
 
 @router.post("/v1/compensation/calculate", status_code=201, tags=["Compensation"])
@@ -5126,9 +5266,11 @@ def compensation_list_credits(
     from data_ai.core.sla import CreditStatus, get_compensation_engine
 
     st = CreditStatus(status) if status else None
-    return {"credits": [c.to_dict() for c in get_compensation_engine().list_credits(
-        tenant_id=tenant_id, status=st, limit=limit
-    )]}
+    return {
+        "credits": [
+            c.to_dict() for c in get_compensation_engine().list_credits(tenant_id=tenant_id, status=st, limit=limit)
+        ]
+    }
 
 
 @router.post("/v1/compensation/dispute", status_code=201, tags=["Compensation"])
@@ -5166,9 +5308,11 @@ def compensation_list_disputes(
     from data_ai.core.sla import DisputeStatus, get_compensation_engine
 
     st = DisputeStatus(status) if status else None
-    return {"disputes": [d.to_dict() for d in get_compensation_engine().list_disputes(
-        tenant_id=tenant_id, status=st, limit=limit
-    )]}
+    return {
+        "disputes": [
+            d.to_dict() for d in get_compensation_engine().list_disputes(tenant_id=tenant_id, status=st, limit=limit)
+        ]
+    }
 
 
 @router.get("/v1/compensation/tenant-summary", tags=["Compensation"])

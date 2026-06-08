@@ -137,7 +137,7 @@ class Message:
             "message_type": self.message_type.value,
             "priority": self.priority.value,
             "content": self.content
-            if not isinstance(self.content, (dict, list, str, int, float, bool, type(None)))
+            if not isinstance(self.content, dict | list | str | int | float | bool | type(None))
             else self.content,
             "metadata": self.metadata,
             "correlation_id": self.correlation_id,

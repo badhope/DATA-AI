@@ -172,6 +172,7 @@ class Decision:
 
 # ---------- ABAC 条件求值 ----------
 
+
 def _get_nested(obj: dict[str, Any], path: str) -> Any:
     """支持 a.b.c 嵌套取值"""
     cur: Any = obj
@@ -190,9 +191,9 @@ _OPS: dict[str, Callable[[Any, Any], bool]] = {
     "<": lambda a, b: a is not None and b is not None and a < b,
     ">=": lambda a, b: a is not None and b is not None and a >= b,
     "<=": lambda a, b: a is not None and b is not None and a <= b,
-    "in": lambda a, b: a in (b if isinstance(b, (list, tuple)) else [b]),
-    "not_in": lambda a, b: a not in (b if isinstance(b, (list, tuple)) else [b]),
-    "contains": lambda a, b: b in (a if isinstance(a, (str, list)) else str(a)),
+    "in": lambda a, b: a in (b if isinstance(b, list | tuple) else [b]),
+    "not_in": lambda a, b: a not in (b if isinstance(b, list | tuple) else [b]),
+    "contains": lambda a, b: b in (a if isinstance(a, str | list) else str(a)),
     "matches": lambda a, b: bool(re.search(str(b), str(a or ""))),
     "cidr_match": lambda a, b: _cidr_match(str(a or ""), str(b)),
 }
@@ -202,6 +203,7 @@ def _cidr_match(ip: str, cidr: str) -> bool:
     """检查 IP 是否在 CIDR 段内 (仅支持 IPv4 简化版)"""
     try:
         import ipaddress
+
         return ipaddress.ip_address(ip) in ipaddress.ip_network(cidr, strict=False)
     except Exception:
         return False
@@ -248,31 +250,63 @@ class RBACEngine:
         """初始化系统内置角色"""
         for name, perms in [
             ("super-admin", [Permission("*", "*", "allow", "超级管理员")]),
-            ("admin", [
-                Permission("agent", "*"), Permission("memory", "*"), Permission("rag", "*"),
-                Permission("skill", "*"), Permission("tool", "*"), Permission("team", "*"),
-                Permission("sandbox", "*"), Permission("mcp", "*"),
-                Permission("quota", "read"), Permission("audit", "read"),
-            ]),
-            ("developer", [
-                Permission("agent", "create"), Permission("agent", "read"),
-                Permission("agent", "update"), Permission("agent", "run"),
-                Permission("memory", "*"), Permission("rag", "read"), Permission("rag", "create"),
-                Permission("skill", "*"), Permission("tool", "read"), Permission("tool", "run"),
-            ]),
-            ("viewer", [
-                Permission("agent", "read"), Permission("memory", "read"),
-                Permission("rag", "read"), Permission("skill", "read"),
-                Permission("tool", "read"), Permission("team", "read"),
-            ]),
-            ("billing-admin", [
-                Permission("billing", "*"), Permission("quota", "*"),
-                Permission("audit", "read"),
-            ]),
-            ("auditor", [
-                Permission("audit", "read"), Permission("quota", "read"),
-                Permission("billing", "read"),
-            ]),
+            (
+                "admin",
+                [
+                    Permission("agent", "*"),
+                    Permission("memory", "*"),
+                    Permission("rag", "*"),
+                    Permission("skill", "*"),
+                    Permission("tool", "*"),
+                    Permission("team", "*"),
+                    Permission("sandbox", "*"),
+                    Permission("mcp", "*"),
+                    Permission("quota", "read"),
+                    Permission("audit", "read"),
+                ],
+            ),
+            (
+                "developer",
+                [
+                    Permission("agent", "create"),
+                    Permission("agent", "read"),
+                    Permission("agent", "update"),
+                    Permission("agent", "run"),
+                    Permission("memory", "*"),
+                    Permission("rag", "read"),
+                    Permission("rag", "create"),
+                    Permission("skill", "*"),
+                    Permission("tool", "read"),
+                    Permission("tool", "run"),
+                ],
+            ),
+            (
+                "viewer",
+                [
+                    Permission("agent", "read"),
+                    Permission("memory", "read"),
+                    Permission("rag", "read"),
+                    Permission("skill", "read"),
+                    Permission("tool", "read"),
+                    Permission("team", "read"),
+                ],
+            ),
+            (
+                "billing-admin",
+                [
+                    Permission("billing", "*"),
+                    Permission("quota", "*"),
+                    Permission("audit", "read"),
+                ],
+            ),
+            (
+                "auditor",
+                [
+                    Permission("audit", "read"),
+                    Permission("quota", "read"),
+                    Permission("billing", "read"),
+                ],
+            ),
         ]:
             role = Role(name=name, permissions=perms, is_system=True)
             self._roles[role.id] = role
@@ -331,7 +365,9 @@ class RBACEngine:
             return True
 
     # ---------- 策略 CRUD ----------
-    def create_policy(self, name: str, conditions: list[dict[str, Any]], effect: str = "allow", **kwargs: Any) -> Policy:
+    def create_policy(
+        self, name: str, conditions: list[dict[str, Any]], effect: str = "allow", **kwargs: Any
+    ) -> Policy:
         with self._lock:
             p = Policy(name=name, conditions=conditions, effect=effect, **kwargs)
             self._policies[p.id] = p
@@ -346,15 +382,27 @@ class RBACEngine:
             return self._policies.pop(policy_id, None) is not None
 
     # ---------- 分配 ----------
-    def assign(self, user_id: str, role_id: str, tenant_id: str = "", granted_by: str = "", expires_at: float = 0.0, delegation_from: str = "") -> Assignment:
+    def assign(
+        self,
+        user_id: str,
+        role_id: str,
+        tenant_id: str = "",
+        granted_by: str = "",
+        expires_at: float = 0.0,
+        delegation_from: str = "",
+    ) -> Assignment:
         with self._lock:
             # 去重: 同 (user, role, tenant)
             for a in self._assignments:
                 if a.user_id == user_id and a.role_id == role_id and a.tenant_id == tenant_id and not a.is_expired():
                     return a
             a = Assignment(
-                user_id=user_id, role_id=role_id, tenant_id=tenant_id,
-                granted_by=granted_by, expires_at=expires_at, delegation_from=delegation_from,
+                user_id=user_id,
+                role_id=role_id,
+                tenant_id=tenant_id,
+                granted_by=granted_by,
+                expires_at=expires_at,
+                delegation_from=delegation_from,
             )
             self._assignments.append(a)
             return a
@@ -363,7 +411,8 @@ class RBACEngine:
         with self._lock:
             before = len(self._assignments)
             self._assignments = [
-                a for a in self._assignments
+                a
+                for a in self._assignments
                 if not (a.user_id == user_id and a.role_id == role_id and a.tenant_id == tenant_id)
             ]
             return len(self._assignments) < before
@@ -430,7 +479,11 @@ class RBACEngine:
             matched_role_name = ""
             for p in all_perms:
                 if p.effect == "deny" and p.matches(resource, action):
-                    d = Decision(allowed=False, reason=f"denied by permission {p.resource}.{p.action}", matched_role=",".join(r.name for r in roles))
+                    d = Decision(
+                        allowed=False,
+                        reason=f"denied by permission {p.resource}.{p.action}",
+                        matched_role=",".join(r.name for r in roles),
+                    )
                     self._log_decision(d)
                     return d
                 if p.effect == "allow" and p.matches(resource, action):
@@ -438,12 +491,19 @@ class RBACEngine:
                     matched_role_name = r.name  # type: ignore[possibly-undefined]
 
             if not has_allow:
-                d = Decision(allowed=False, reason=f"no allow permission for {resource}.{action}", matched_role=",".join(r.name for r in roles))
+                d = Decision(
+                    allowed=False,
+                    reason=f"no allow permission for {resource}.{action}",
+                    matched_role=",".join(r.name for r in roles),
+                )
                 self._log_decision(d)
                 return d
 
             # 3) ABAC 策略叠加 (按 priority)
-            sorted_policies = sorted([p for p in self._policies.values() if p.enabled and (p.tenant_id == "" or p.tenant_id == tenant_id)], key=lambda p: p.priority)
+            sorted_policies = sorted(
+                [p for p in self._policies.values() if p.enabled and (p.tenant_id == "" or p.tenant_id == tenant_id)],
+                key=lambda p: p.priority,
+            )
             env_full = {**env, "user_id": user_id, "tenant_id": tenant_id}
             for pol in sorted_policies:
                 all_ok = True
@@ -496,7 +556,9 @@ class RBACEngine:
         self, from_user: str, to_user: str, role_id: str, tenant_id: str = "", expires_at: float = 0.0
     ) -> Assignment:
         """临时委托角色给另一用户"""
-        return self.assign(to_user, role_id, tenant_id, granted_by=from_user, expires_at=expires_at, delegation_from=from_user)
+        return self.assign(
+            to_user, role_id, tenant_id, granted_by=from_user, expires_at=expires_at, delegation_from=from_user
+        )
 
     # ---------- 决策日志 ----------
     def _log_decision(self, d: Decision) -> None:

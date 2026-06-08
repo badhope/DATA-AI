@@ -166,7 +166,9 @@ class AuditStore:
         writer.writeheader()
         for row in data:
             # 复杂字段 → JSON 字符串
-            row_flat = {k: (json.dumps(v, ensure_ascii=False) if isinstance(v, (dict, list)) else v) for k, v in row.items()}
+            row_flat = {
+                k: (json.dumps(v, ensure_ascii=False) if isinstance(v, dict | list) else v) for k, v in row.items()
+            }
             writer.writerow(row_flat)
         return buf.getvalue()
 
@@ -236,7 +238,11 @@ def _redact(value: Any, depth: int = 0) -> Any:
         return "..."
     if isinstance(value, dict):
         return {
-            k: ("***REDACTED***" if any(s in k.lower() for s in ("password", "token", "api_key", "secret")) else _redact(v, depth + 1))
+            k: (
+                "***REDACTED***"
+                if any(s in k.lower() for s in ("password", "token", "api_key", "secret"))
+                else _redact(v, depth + 1)
+            )
             for k, v in value.items()
         }
     if isinstance(value, list):
@@ -273,6 +279,7 @@ def install_audit_middleware(app: Any, store: AuditStore | None = None) -> None:
             body_json = json.loads(body_bytes) if body_bytes else None
         except (json.JSONDecodeError, UnicodeDecodeError):
             body_json = None
+
         # 重新塞回去给后续 handler
         async def _receive():
             return {"type": "http.request", "body": body_bytes, "more_body": False}

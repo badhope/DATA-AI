@@ -62,26 +62,32 @@ SYSTEM_PROMPT = """你是一位资深小说写作助手,擅长长篇创作,负�
 # ─── 工具集 ────────────────────────────────────────────
 
 TOOLS: list[str] = [
-    "context_store_save", "context_store_load", "context_store_list",
-    "context_store_search", "context_store_delete", "context_store_history",
-    "file_read", "file_write", "file_search",
-    "web_search",          # 查资料(历史/风土/科学)
-    "polish_text",         # 润色
-    "word_read",           # 读 docx 草稿
-    "write_docx",          # 写章节
-    "write_md",            # 写大纲/人物档案
+    "context_store_save",
+    "context_store_load",
+    "context_store_list",
+    "context_store_search",
+    "context_store_delete",
+    "context_store_history",
+    "file_read",
+    "file_write",
+    "file_search",
+    "web_search",  # 查资料(历史/风土/科学)
+    "polish_text",  # 润色
+    "word_read",  # 读 docx 草稿
+    "write_docx",  # 写章节
+    "write_md",  # 写大纲/人物档案
 ]
 
 # ─── 默认上下文(命名空间内部的结构) ────────────────────
 
-DEFAULT_NAMESPACE = "novel"        # 实际使用时改为 novel_<title>
+DEFAULT_NAMESPACE = "novel"  # 实际使用时改为 novel_<title>
 DEFAULT_TAGS = ["preset", "novel-writer"]
 DEFAULT_CONTEXT_NAMES = [
-    "outline",              # 总大纲
-    "characters",           # 人物档案
-    "world_settings",       # 世界观/设定
-    "foreshadowing",        # 伏笔登记
-    "chapters",             # 章节索引(不含正文,正文在独立文件)
+    "outline",  # 总大纲
+    "characters",  # 人物档案
+    "world_settings",  # 世界观/设定
+    "foreshadowing",  # 伏笔登记
+    "chapters",  # 章节索引(不含正文,正文在独立文件)
 ]
 
 # ─── 预设配置 ──────────────────────────────────────────
@@ -96,14 +102,14 @@ PRESET: dict[str, Any] = {
     "default_tags": DEFAULT_TAGS,
     "default_context_names": DEFAULT_CONTEXT_NAMES,
     "max_iterations": 12,
-    "temperature": 0.8,        # 创作要灵活
+    "temperature": 0.8,  # 创作要灵活
     "reflection": True,
-    "memory_lifetime": "forever",   # 创作记忆要永久
+    "memory_lifetime": "forever",  # 创作记忆要永久
     "user_facing_traits": [
-        "consistency_first",    # 一致性优先
-        "no_self_decide",       # 不替用户决定
-        "context_aware",        # 强上下文
-        "long_chat_friendly",   # 适合长对话
+        "consistency_first",  # 一致性优先
+        "no_self_decide",  # 不替用户决定
+        "context_aware",  # 强上下文
+        "long_chat_friendly",  # 适合长对话
     ],
 }
 

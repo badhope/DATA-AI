@@ -7,11 +7,8 @@ import os
 import subprocess
 import sys
 import uuid
-from pathlib import Path
 
 # 让脚本可以直接 python3 tests/e2e_p1_9.py 跑
-
-
 
 
 def check(name: str, ok: bool, detail: str = "") -> None:
@@ -28,15 +25,25 @@ def _is_rate_limited(e: Exception) -> bool:
     # 把 detail 也拼上一起查
     parts = [str(e)]
     if hasattr(e, "detail") and e.detail:
-        if isinstance(e.detail, (dict, list)):
+        if isinstance(e.detail, dict | list):
             parts.append(json.dumps(e.detail, ensure_ascii=False))
         else:
             parts.append(str(e.detail))
     full = "\n".join(parts).lower()
     keys = (
-        "freetier", "free_tier", "quota", "rate", "alloc", "exhausted",
-        "allocationquota", "rate_limit", "ratelimit", "throttl",
-        "allocation", "free tier", "free-tier",
+        "freetier",
+        "free_tier",
+        "quota",
+        "rate",
+        "alloc",
+        "exhausted",
+        "allocationquota",
+        "rate_limit",
+        "ratelimit",
+        "throttl",
+        "allocation",
+        "free tier",
+        "free-tier",
     )
     return any(k in full for k in keys)
 
@@ -118,7 +125,8 @@ def test_python_sdk() -> None:
     # 1.10 create_memory + search + delete
     mem = c.create_memory(
         content=f"P1-9 SDK test memory {uuid.uuid4().hex[:6]}",
-        type="note", tags=["p1-9", "sdk"],
+        type="note",
+        tags=["p1-9", "sdk"],
     )
     mid = mem.get("id")
     check("sdk.create_memory", bool(mid), f"id={mid}")
@@ -190,7 +198,8 @@ def test_python_sdk() -> None:
     try:
         srv = c.create_mcp_server(
             name=f"p1-9-sdk-mcp-{uuid.uuid4().hex[:6]}",
-            type="http", url="http://example.com/mcp",
+            type="http",
+            url="http://example.com/mcp",
             description="P1-9 SDK test",
         )
         custom_id = srv.get("id")
@@ -210,7 +219,9 @@ def test_python_sdk() -> None:
     check("sdk.reasoning_sequential", isinstance(r.get("thoughts"), list), f"{len(r.get('thoughts',[]))} thoughts")
 
     r = c.reasoning_reflection("什么是 CoT?", "CoT 是思维链。")
-    check("sdk.reasoning_reflection", isinstance(r.get("issues_found"), list), f"{len(r.get('issues_found',[]))} issues")
+    check(
+        "sdk.reasoning_reflection", isinstance(r.get("issues_found"), list), f"{len(r.get('issues_found',[]))} issues"
+    )
 
     r = c.reasoning_hypothesis("为什么慢?", ["CPU 90%", "DB 慢"], max_hypotheses=3)
     check("sdk.reasoning_hypothesis", len(r.get("hypotheses", [])) >= 1, f"{len(r.get('hypotheses',[]))} hyps")
@@ -276,10 +287,14 @@ def test_cli() -> None:
     # 2.7 agent create + delete
     name = f"p1-9-cli-{uuid.uuid4().hex[:6]}"
     rc, out, err = _run_cli(
-        "agent", "create",
-        "--name", name,
-        "--model", "qwen-turbo",
-        "--system", "brief",
+        "agent",
+        "create",
+        "--name",
+        name,
+        "--model",
+        "qwen-turbo",
+        "--system",
+        "brief",
     )
     check("cli.agent_create", rc == 0 and '"id"' in out, f"out={out[:120]}")
     aid = None
@@ -294,10 +309,14 @@ def test_cli() -> None:
 
     # 2.8 memory add
     rc, out, err = _run_cli(
-        "memory", "add",
-        "--content", f"P1-9 CLI test {uuid.uuid4().hex[:6]}",
-        "--type", "note",
-        "--tags", "p1-9,cli",
+        "memory",
+        "add",
+        "--content",
+        f"P1-9 CLI test {uuid.uuid4().hex[:6]}",
+        "--type",
+        "note",
+        "--tags",
+        "p1-9,cli",
     )
     check("cli.memory_add", rc == 0 and '"id"' in out, f"out={out[:120]}")
     mem_id = None
@@ -322,10 +341,14 @@ def test_cli() -> None:
     # 2.12 skill create
     skill_name = f"p1-9-cli-skill-{uuid.uuid4().hex[:6]}"
     rc, out, err = _run_cli(
-        "skill", "create",
-        "--name", skill_name,
-        "--description", "P1-9 CLI test",
-        "--category", "custom",
+        "skill",
+        "create",
+        "--name",
+        skill_name,
+        "--description",
+        "P1-9 CLI test",
+        "--category",
+        "custom",
     )
     check("cli.skill_create", rc == 0 and '"name"' in out, f"out={out[:120]}")
     rc, out, err = _run_cli("skill", "list")
@@ -358,10 +381,14 @@ def test_cli() -> None:
 
     # 2.15 mcp invoke
     rc, out, err = _run_cli(
-        "mcp", "invoke",
-        "--server", "mcp-in-process",
-        "--tool", "calculate",
-        "--args", '{"expression":"(7+3)*2"}',
+        "mcp",
+        "invoke",
+        "--server",
+        "mcp-in-process",
+        "--tool",
+        "calculate",
+        "--args",
+        '{"expression":"(7+3)*2"}',
     )
     check("cli.mcp_invoke", rc == 0 and '"result"' in out, f"out={out[:120]}")
 
@@ -371,10 +398,14 @@ def test_cli() -> None:
 
     # 2.17 mcp create + delete
     rc, out, err = _run_cli(
-        "mcp", "create",
-        "--name", f"p1-9-cli-mcp-{uuid.uuid4().hex[:6]}",
-        "--type", "http",
-        "--url", "http://example.com/mcp",
+        "mcp",
+        "create",
+        "--name",
+        f"p1-9-cli-mcp-{uuid.uuid4().hex[:6]}",
+        "--type",
+        "http",
+        "--url",
+        "http://example.com/mcp",
     )
     check("cli.mcp_create", rc == 0 and '"id"' in out, f"out={out[:120]}")
     custom_id = None
@@ -406,9 +437,12 @@ def test_cli() -> None:
     # 2.20 team create
     team_name = f"p1-9-cli-team-{uuid.uuid4().hex[:6]}"
     rc, out, err = _run_cli(
-        "team", "create",
-        "--name", team_name,
-        "--members", "alice:analyst:1.0;bob:reviewer:1.0",
+        "team",
+        "create",
+        "--name",
+        team_name,
+        "--members",
+        "alice:analyst:1.0;bob:reviewer:1.0",
     )
     check("cli.team_create", rc == 0 and '"id"' in out, f"out={out[:120]}")
     team_id = None
@@ -487,24 +521,30 @@ def main() -> int:
     return 0 if not failed else 1
 
 
-
-
 # ── pytest 集成 (auto) ────────────────────────────────────
 import base64 as _b64
 import sys as _sys
+
 import pytest as _pytest
-_MODULE_BODY = _b64.b64decode('IiIiClAxLTkgRTJFIOa1i+ivlTogV2ViL0NMSS9QeXRob24gU0RLIOS4ieWxguaOp+WItuimhuebliA4IOWkp+iDveWKmwoK6KaG55uWOgoxLiBQeXRob24gU0RLOiDnlKggRGF0YUFJQ2xpZW50IOiwg+eUqOaJgOaciSA4IOWkp+iDveWKm+eahOaguOW/g+aWueazlQoyLiBDTEk6IOeUqCBzdWJwcm9jZXNzIOiwg+eUqCBkYXRhLWFpIENMSSDlkITlrZDlkb3ku6Qs6aqM6K+B6L6T5Ye6CjMuIOS4gOiHtOaApzog5ZCM5LiA5pON5L2cLFNESyDlkowgQ0xJIOmDveiDveWujOaIkCznu5PmnpzkuIDoh7QKIiIiCl9TUkMgPSBQYXRoKF9fZmlsZV9fKS5yZXNvbHZlKCkucGFyZW50LnBhcmVudCAvICJzcmMiCnN5cy5wYXRoLmluc2VydCgwLCBzdHIoX1NSQykpCkJBU0UgPSBvcy5nZXRlbnYoIkRBVEFfQUlfQkFTRSIsICJodHRwOi8vbG9jYWxob3N0OjgwMDAiKQpBUElfS0VZID0gb3MuZ2V0ZW52KCJEQVRBX0FJX0FQSV9LRVkiLCAic2stdGVzdC1wMS04IikKcGFzc2VkOiBsaXN0W3N0cl0gPSBbXQpmYWlsZWQ6IGxpc3RbdHVwbGVbc3RyLCBzdHJdXSA9IFtdCmlmIF9fbmFtZV9fID09ICJfX21haW5fXyI6CiAgICBzeXMuZXhpdChtYWluKCkpCg==').decode("utf-8")
+
+_MODULE_BODY = _b64.b64decode(
+    "IiIiClAxLTkgRTJFIOa1i+ivlTogV2ViL0NMSS9QeXRob24gU0RLIOS4ieWxguaOp+WItuimhuebliA4IOWkp+iDveWKmwoK6KaG55uWOgoxLiBQeXRob24gU0RLOiDnlKggRGF0YUFJQ2xpZW50IOiwg+eUqOaJgOaciSA4IOWkp+iDveWKm+eahOaguOW/g+aWueazlQoyLiBDTEk6IOeUqCBzdWJwcm9jZXNzIOiwg+eUqCBkYXRhLWFpIENMSSDlkITlrZDlkb3ku6Qs6aqM6K+B6L6T5Ye6CjMuIOS4gOiHtOaApzog5ZCM5LiA5pON5L2cLFNESyDlkowgQ0xJIOmDveiDveWujOaIkCznu5PmnpzkuIDoh7QKIiIiCl9TUkMgPSBQYXRoKF9fZmlsZV9fKS5yZXNvbHZlKCkucGFyZW50LnBhcmVudCAvICJzcmMiCnN5cy5wYXRoLmluc2VydCgwLCBzdHIoX1NSQykpCkJBU0UgPSBvcy5nZXRlbnYoIkRBVEFfQUlfQkFTRSIsICJodHRwOi8vbG9jYWxob3N0OjgwMDAiKQpBUElfS0VZID0gb3MuZ2V0ZW52KCJEQVRBX0FJX0FQSV9LRVkiLCAic2stdGVzdC1wMS04IikKcGFzc2VkOiBsaXN0W3N0cl0gPSBbXQpmYWlsZWQ6IGxpc3RbdHVwbGVbc3RyLCBzdHJdXSA9IFtdCmlmIF9fbmFtZV9fID09ICJfX21haW5fXyI6CiAgICBzeXMuZXhpdChtYWluKCkpCg=="
+).decode("utf-8")
+
 
 def _run_module_body() -> None:
     """执行原顶层可执行代码, 把 ``sys.exit()`` 转成 ``SystemExit`` 异常."""
     _orig_exit = _sys.exit
+
     def _safe_exit(code=0):
         raise SystemExit(code)
+
     _sys.exit = _safe_exit
     try:
         exec(compile(_MODULE_BODY, __file__, "exec"), globals())
     finally:
         _sys.exit = _orig_exit
+
 
 if __name__ == "__main__":
     _run_module_body()

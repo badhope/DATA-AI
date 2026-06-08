@@ -238,7 +238,6 @@ class TestFullToolIntegration:
         assert client.config.model_name == "gpt-4o"
 
     def test_register_model_helper_function(self):
-
         llm = LLMManager()
         config = ModelConfig(
             provider=ModelProvider.DEEPSEEK,

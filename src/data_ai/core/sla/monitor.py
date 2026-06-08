@@ -219,9 +219,13 @@ class SLAMonitor:
             probes = [p for p in self._probes if p.component_id == slo.component_id and p.timestamp >= cutoff]
             if not probes:
                 return {
-                    "slo_id": slo.id, "name": slo.name, "type": slo.sli_type,
-                    "current_value": None, "target": slo.target_value,
-                    "status": "no_data", "sample_size": 0,
+                    "slo_id": slo.id,
+                    "name": slo.name,
+                    "type": slo.sli_type,
+                    "current_value": None,
+                    "target": slo.target_value,
+                    "status": "no_data",
+                    "sample_size": 0,
                 }
             if slo.sli_type == "availability":
                 ok = sum(1 for p in probes if p.success)
@@ -259,12 +263,14 @@ class SLAMonitor:
         return [self.evaluate_slo(s) for s in self.list_slos()]
 
     # ---------- 探测 ----------
-    def record_probe(self, component_id: str, success: bool, latency_ms: float = 0.0, error_code: int = 200) -> SLIProbe:
+    def record_probe(
+        self, component_id: str, success: bool, latency_ms: float = 0.0, error_code: int = 200
+    ) -> SLIProbe:
         with self._lock:
             p = SLIProbe(component_id=component_id, success=success, latency_ms=latency_ms, error_code=error_code)
             self._probes.append(p)
             if len(self._probes) > self._max_probes:
-                self._probes = self._probes[-self._max_probes:]
+                self._probes = self._probes[-self._max_probes :]
             return p
 
     def feed_from_audit(
@@ -293,7 +299,7 @@ class SLAMonitor:
                 self._probes.append(p)
                 count += 1
             if len(self._probes) > self._max_probes:
-                self._probes = self._probes[-self._max_probes:]
+                self._probes = self._probes[-self._max_probes :]
             return count
 
     def _default_path_to_component(self, path: str) -> str:
@@ -327,16 +333,27 @@ class SLAMonitor:
     ) -> Incident:
         with self._lock:
             inc = Incident(
-                title=title, severity=severity, affected_components=affected_components,
-                updates=[{"at": time.time(), "status": IncidentStatus.INVESTIGATING.value, "message": message}] if message else [],
+                title=title,
+                severity=severity,
+                affected_components=affected_components,
+                updates=[{"at": time.time(), "status": IncidentStatus.INVESTIGATING.value, "message": message}]
+                if message
+                else [],
             )
             self._incidents[inc.id] = inc
             # 联动:受影响组件降级
             for cid in affected_components:
-                self.update_component_status(cid, ComponentStatus.MAJOR_OUTAGE if severity == IncidentSeverity.CRITICAL else ComponentStatus.PARTIAL_OUTAGE)
+                self.update_component_status(
+                    cid,
+                    ComponentStatus.MAJOR_OUTAGE
+                    if severity == IncidentSeverity.CRITICAL
+                    else ComponentStatus.PARTIAL_OUTAGE,
+                )
             return inc
 
-    def update_incident(self, incident_id: str, status: IncidentStatus, message: str = "", by: str = "") -> Incident | None:
+    def update_incident(
+        self, incident_id: str, status: IncidentStatus, message: str = "", by: str = ""
+    ) -> Incident | None:
         with self._lock:
             inc = self._incidents.get(incident_id)
             if not inc:
@@ -366,10 +383,15 @@ class SLAMonitor:
         with self._lock:
             components = []
             for c in self._components.values():
-                components.append({
-                    "id": c.id, "name": c.name, "description": c.description,
-                    "status": c.status.value, "updated_at": c.updated_at,
-                })
+                components.append(
+                    {
+                        "id": c.id,
+                        "name": c.name,
+                        "description": c.description,
+                        "status": c.status.value,
+                        "updated_at": c.updated_at,
+                    }
+                )
             open_incs = [i.to_dict() for i in self._incidents.values() if i.is_open()]
             overall = "operational"
             for c in self._components.values():
@@ -402,10 +424,13 @@ class SLAMonitor:
             # SLO 报表
             slo_reports = [self.evaluate_slo(s, window_sec=(end - start)) for s in self._slos.values()]
             # 计算综合可用率
-            availability_slos = [r for r in slo_reports if r["type"] == "availability" and r["current_value"] is not None]
+            availability_slos = [
+                r for r in slo_reports if r["type"] == "availability" and r["current_value"] is not None
+            ]
             avg_avail = statistics.mean([r["current_value"] for r in availability_slos]) if availability_slos else None
             return {
-                "year": year, "month": month,
+                "year": year,
+                "month": month,
                 "period": {"start": start, "end": end},
                 "incident_count": len(incidents),
                 "severity_breakdown": severity_counts,

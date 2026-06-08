@@ -172,8 +172,11 @@ class AuditChain:
                 prev_root = self._blocks[-1].root if self._blocks else ""
                 block = ChainBlock(
                     index=len(self._blocks),
-                    entry_ids=[], entry_count=0,
-                    prev_root=prev_root, root="", sealed=True,
+                    entry_ids=[],
+                    entry_count=0,
+                    prev_root=prev_root,
+                    root="",
+                    sealed=True,
                 )
                 self._blocks.append(block)
                 self._write_block(block)
@@ -189,7 +192,9 @@ class AuditChain:
             for b in self._blocks:
                 if b.prev_root != prev_root:
                     ok = False
-                    issues.append(f"block {b.id}: prev_root mismatch (expected {prev_root[:16]}, got {b.prev_root[:16]})")
+                    issues.append(
+                        f"block {b.id}: prev_root mismatch (expected {prev_root[:16]}, got {b.prev_root[:16]})"
+                    )
                 prev_root = b.root
             return {
                 "ok": ok,
@@ -209,7 +214,9 @@ class AuditChain:
                 return {"ok": False, "error": "entry not in block"}
             entry_index = block.entry_ids.index(entry.get("id"))
             # 重算 block 的 root
-            block_entries = [next((e for e in self._buffer if e.get("id") == eid), {"id": eid}) for eid in block.entry_ids]  # 简化
+            block_entries = [
+                next((e for e in self._buffer if e.get("id") == eid), {"id": eid}) for eid in block.entry_ids
+            ]  # 简化
             # 实际重新计算需要原始 entry,这里用 hash 重算
             leaf_hashes = [_hash(e) for e in block_entries]
             computed_root = build_merkle_root(leaf_hashes)

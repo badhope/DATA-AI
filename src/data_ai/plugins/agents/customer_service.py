@@ -50,11 +50,11 @@ SYSTEM_PROMPT = """你是「{company_name}」的专业客服,服务客户。
 # ─── 工具集 ────────────────────────────────────────────
 
 TOOLS: list[str] = [
-    "search_orders",       # 查订单(需业务方实现)
-    "track_shipment",      # 查物流
-    "search_kb",           # 知识库/FAQ
-    "escalate_human",      # 转人工
-    "send_email",          # 发邮件
+    "search_orders",  # 查订单(需业务方实现)
+    "track_shipment",  # 查物流
+    "search_kb",  # 知识库/FAQ
+    "escalate_human",  # 转人工
+    "send_email",  # 发邮件
     "context_store_save",  # 存客户档案/对话要点
     "context_store_load",
 ]
@@ -64,9 +64,9 @@ TOOLS: list[str] = [
 DEFAULT_NAMESPACE = "customer_service"
 DEFAULT_TAGS = ["preset", "customer-service"]
 DEFAULT_CONTEXT_NAMES = [
-    "company_info",        # 公司简介、退换货政策、联系方式
-    "faq",                 # 常见问答
-    "product_catalog",     # 产品目录(可选)
+    "company_info",  # 公司简介、退换货政策、联系方式
+    "faq",  # 常见问答
+    "product_catalog",  # 产品目录(可选)
 ]
 
 # ─── 预设配置 ──────────────────────────────────────────
@@ -84,10 +84,10 @@ PRESET: dict[str, Any] = {
     "temperature": 0.3,  # 客服回答要稳,温度低
     "reflection": True,
     "user_facing_traits": [
-        "empathy_first",        # 先共情
-        "short_sentences",      # 短句
-        "no_jargon",            # 不用术语
-        "never_fabricate",      # 绝不编造
+        "empathy_first",  # 先共情
+        "short_sentences",  # 短句
+        "no_jargon",  # 不用术语
+        "never_fabricate",  # 绝不编造
     ],
 }
 

@@ -7,6 +7,7 @@ P1-10 企业治理四件套单元测试
 - Webhooks: 签名 / 派发 / 订阅 CRUD / 投递统计
 - Scheduler: cron / at / every 解析 / 执行 / 触发
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -430,9 +431,7 @@ class TestWebhooks:
         sig3 = _sign_payload("other", body, ts)
         assert sig != sig3
         # 标准 HMAC-SHA256
-        expected = hmac.new(
-            secret.encode(), f"{ts}.{body}".encode(), hashlib.sha256
-        ).hexdigest()
+        expected = hmac.new(secret.encode(), f"{ts}.{body}".encode(), hashlib.sha256).hexdigest()
         assert sig == expected
 
     def test_subscription_lifecycle(self):

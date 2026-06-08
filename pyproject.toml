@@ -127,6 +127,14 @@ ignore = [
 "src/data_ai/utils/encryption.py" = ["F401"]  # cryptography 为可选加密后端
 "src/data_ai/cli/completer.py" = ["F401"]  # prompt_toolkit 为可选 CLI 增强
 "tests/conftest.py" = ["E402", "F401"]
+# 脚本式 e2e 测试：在 ``if __name__ == "__main__"`` 块里定义全局变量 (BACKEND, API_KEY,
+# results, …) 然后在顶部辅助函数里引用, 静态分析看不到定义。这些文件跑时是作为
+# 脚本 (python tests/e2e_xxx.py) 执行, 不是 pytest 收集目标, 不影响运行。
+"tests/e2e_*.py" = ["F821"]
+# P0/P1 早期模块化测试: 同样在 ``__main__`` 块中初始化 ``tool`` / ``tmp_path`` / ``API`` /
+# ``API_KEY`` / ``fail_msgs``。通过 ``scripts/run_*.py`` 包装后作为脚本运行。
+"tests/test_p0_4_rag_fileread.py" = ["F821"]
+"tests/test_p1_1_2_checkpoint_hil.py" = ["F821"]
 "scripts/check_system*.py" = ["E402"]
 "web/**" = ["ALL"]
 

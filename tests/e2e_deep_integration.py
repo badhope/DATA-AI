@@ -1,13 +1,7 @@
-
-import asyncio
 import json
-import os
 import re
-import sys
 
 import httpx
-
-
 
 
 def _check(name: str, ok: bool, detail: str = "") -> None:
@@ -28,7 +22,9 @@ async def test_streaming_dedup(client: httpx.AsyncClient) -> None:
     accumulated = ""
     chunk_count = 0
     duplicates = 0
-    async with client.stream("POST", f"{BACKEND}/v1/chat/completions", json=payload, headers=HEADERS, timeout=30) as resp:
+    async with client.stream(
+        "POST", f"{BACKEND}/v1/chat/completions", json=payload, headers=HEADERS, timeout=30
+    ) as resp:
         async for line in resp.aiter_lines():
             if not line.startswith("data: "):
                 continue
@@ -52,7 +48,9 @@ async def test_streaming_dedup(client: httpx.AsyncClient) -> None:
     _check("SSE 收到 chunks", chunk_count > 0, f"chunks={chunk_count}")
     _check("无重复 chunk", duplicates == 0, f"duplicates={duplicates}")
     _check("响应内容非空", len(accumulated) > 10, f"len={len(accumulated)}")
-    _check("响应内容有 '上海' 或 'shanghai'", "上海" in accumulated or "shanghai" in accumulated.lower(), accumulated[:50])
+    _check(
+        "响应内容有 '上海' 或 'shanghai'", "上海" in accumulated or "shanghai" in accumulated.lower(), accumulated[:50]
+    )
 
 
 async def test_finish_event_no_repeat(client: httpx.AsyncClient) -> None:
@@ -67,7 +65,9 @@ async def test_finish_event_no_repeat(client: httpx.AsyncClient) -> None:
     accumulated = ""
     finish_seen = False
     last_delta_content = ""
-    async with client.stream("POST", f"{BACKEND}/v1/chat/completions", json=payload, headers=HEADERS, timeout=30) as resp:
+    async with client.stream(
+        "POST", f"{BACKEND}/v1/chat/completions", json=payload, headers=HEADERS, timeout=30
+    ) as resp:
         async for line in resp.aiter_lines():
             if not line.startswith("data: "):
                 continue
@@ -91,8 +91,11 @@ async def test_finish_event_no_repeat(client: httpx.AsyncClient) -> None:
     # 关键: 最后一个 delta 的 content 不应该等于完整 accumulated
     is_repeat = last_delta_content == accumulated
     _check("收到 finish 事件", finish_seen)
-    _check("最后一个 delta 不重复全文", not is_repeat,
-           f"last_delta='{last_delta_content[:30]}...' vs total='{accumulated[:30]}...'" if is_repeat else "")
+    _check(
+        "最后一个 delta 不重复全文",
+        not is_repeat,
+        f"last_delta='{last_delta_content[:30]}...' vs total='{accumulated[:30]}...'" if is_repeat else "",
+    )
     _check("响应含 '2'", "2" in accumulated, accumulated[:30])
 
 
@@ -111,7 +114,9 @@ async def test_empty_assistant_no_default_greeting(client: httpx.AsyncClient) ->
     }
 
     accumulated = ""
-    async with client.stream("POST", f"{BACKEND}/v1/chat/completions", json=payload, headers=HEADERS, timeout=30) as resp:
+    async with client.stream(
+        "POST", f"{BACKEND}/v1/chat/completions", json=payload, headers=HEADERS, timeout=30
+    ) as resp:
         async for line in resp.aiter_lines():
             if not line.startswith("data: "):
                 continue
@@ -145,7 +150,9 @@ async def test_multi_turn_conversation(client: httpx.AsyncClient) -> None:
         "stream": True,
     }
     accumulated1 = ""
-    async with client.stream("POST", f"{BACKEND}/v1/chat/completions", json=payload, headers=HEADERS, timeout=30) as resp:
+    async with client.stream(
+        "POST", f"{BACKEND}/v1/chat/completions", json=payload, headers=HEADERS, timeout=30
+    ) as resp:
         async for line in resp.aiter_lines():
             if not line.startswith("data: "):
                 continue
@@ -173,7 +180,9 @@ async def test_multi_turn_conversation(client: httpx.AsyncClient) -> None:
         "stream": True,
     }
     accumulated2 = ""
-    async with client.stream("POST", f"{BACKEND}/v1/chat/completions", json=payload2, headers=HEADERS, timeout=30) as resp:
+    async with client.stream(
+        "POST", f"{BACKEND}/v1/chat/completions", json=payload2, headers=HEADERS, timeout=30
+    ) as resp:
         async for line in resp.aiter_lines():
             if not line.startswith("data: "):
                 continue
@@ -201,7 +210,10 @@ async def test_tool_calling(client: httpx.AsyncClient) -> None:
     payload = {
         "model": "qwen3-32b",
         "messages": [
-            {"role": "system", "content": "You are a helpful assistant with access to python_execute tool. When the user asks you to run Python, call the tool and show the result."},
+            {
+                "role": "system",
+                "content": "You are a helpful assistant with access to python_execute tool. When the user asks you to run Python, call the tool and show the result.",
+            },
             {"role": "user", "content": "用 python_execute 工具运行 print('Hello, world!') 并返回结果"},
         ],
         "tools": [
@@ -212,12 +224,10 @@ async def test_tool_calling(client: httpx.AsyncClient) -> None:
                     "description": "Execute Python code",
                     "parameters": {
                         "type": "object",
-                        "properties": {
-                            "code": {"type": "string", "description": "Python code to execute"}
-                        },
-                        "required": ["code"]
-                    }
-                }
+                        "properties": {"code": {"type": "string", "description": "Python code to execute"}},
+                        "required": ["code"],
+                    },
+                },
             }
         ],
         "stream": True,
@@ -225,7 +235,9 @@ async def test_tool_calling(client: httpx.AsyncClient) -> None:
 
     accumulated = ""
     tool_call_detected = False
-    async with client.stream("POST", f"{BACKEND}/v1/chat/completions", json=payload, headers=HEADERS, timeout=60) as resp:
+    async with client.stream(
+        "POST", f"{BACKEND}/v1/chat/completions", json=payload, headers=HEADERS, timeout=60
+    ) as resp:
         async for line in resp.aiter_lines():
             if not line.startswith("data: "):
                 continue
@@ -261,7 +273,7 @@ async def test_word_document_generation(client: httpx.AsyncClient) -> None:
             "title": "E2E 测试报告",
             "author": "DATA-AI Bot",
             "format": "text",
-        }
+        },
     }
 
     try:
@@ -273,6 +285,7 @@ async def test_word_document_generation(client: httpx.AsyncClient) -> None:
             _check("返回结果", ok, str(data)[:100])
             # 验证文件存在
             import os
+
             if os.path.exists("/tmp/e2e_test_report.docx"):
                 size = os.path.getsize("/tmp/e2e_test_report.docx")
                 _check("文件已生成", size > 100, f"size={size} bytes")
@@ -293,7 +306,9 @@ async def test_model_switching(client: httpx.AsyncClient) -> None:
         }
         try:
             accumulated = ""
-            async with client.stream("POST", f"{BACKEND}/v1/chat/completions", json=payload, headers=HEADERS, timeout=30) as resp:
+            async with client.stream(
+                "POST", f"{BACKEND}/v1/chat/completions", json=payload, headers=HEADERS, timeout=30
+            ) as resp:
                 if resp.status_code != 200:
                     _check(f"{model} 响应 200", False, f"status={resp.status_code}")
                     continue
@@ -355,7 +370,9 @@ async def test_chinese_chat(client: httpx.AsyncClient) -> None:
         "stream": True,
     }
     accumulated = ""
-    async with client.stream("POST", f"{BACKEND}/v1/chat/completions", json=payload, headers=HEADERS, timeout=30) as resp:
+    async with client.stream(
+        "POST", f"{BACKEND}/v1/chat/completions", json=payload, headers=HEADERS, timeout=30
+    ) as resp:
         async for line in resp.aiter_lines():
             if not line.startswith("data: "):
                 continue
@@ -406,24 +423,30 @@ async def main():
     return 0 if passed == total else 1
 
 
-
-
 # ── pytest 集成 (auto) ────────────────────────────────────
 import base64 as _b64
 import sys as _sys
+
 import pytest as _pytest
-_MODULE_BODY = _b64.b64decode('IiIiClAxLTYg5rex5bqm6ZuG5oiQ5rWL6K+VIOKAlCDpqozor4Hkv67lpI3nmoTovrnnvJjmoYjkvosKCjEuIOa1geW8j+WOu+mHjSDigJQg6aqM6K+B5LiN5Ye6546w6YeN5aSN5YaF5a65CjIuIGZpbmlzaCDkuovku7Yg4oCUIOmqjOivgeWTjeW6lOWujOaVtOS4lOWPquaYvuekuiAxIOasoQozLiDnqbogYXNzaXN0YW50IOWNoOS9jSDigJQg6aqM6K+BIExMTSDkuI3kvJrlm57pu5jorqTpl67lgJkKNC4g5aSa6L2u5a+56K+dIOKAlCDpqozor4HkuIrkuIvmlofkv53mjIEKNS4g5bel5YW36LCD55SoIOKAlCDpqozor4EgcHl0aG9uX2V4ZWN1dGUg6LeR5Ye6IEhlbGxvIHdvcmxkCjYuIFdvcmQg5paH5Lu255Sf5oiQIOKAlCDpqozor4EgLmRvY3gg6L6T5Ye6CjcuIOWkmuaooeWei+WIh+aNoiDigJQg6aqM6K+BIHF3ZW4zLTMyYiAvIHF3ZW4tbWF4IC8gcXdlbjMtY29kZXItZmxhc2gKIiIiCkJBQ0tFTkQgPSBvcy5lbnZpcm9uLmdldCgiREFUQV9BSV9CQVNFIiwgImh0dHA6Ly8xMjcuMC4wLjE6ODAwMCIpCktFWSA9IG9zLmVudmlyb24uZ2V0KCJEQVRBX0FJX1RFU1RfQVBJX0tFWSIsICJzay1SRVBMQUNFX1dJVEhfWU9VUl9URVNUX0tFWSIpICAjIHBsYWNlaG9sZGVyLCDnlKggZW52IOimhueblgpIRUFERVJTID0geyJBdXRob3JpemF0aW9uIjogZiJCZWFyZXIge0tFWX0iLCAiQ29udGVudC1UeXBlIjogImFwcGxpY2F0aW9uL2pzb24ifQpyZXN1bHRzOiBsaXN0W3R1cGxlW3N0ciwgYm9vbCwgc3RyXV0gPSBbXQppZiBfX25hbWVfXyA9PSAiX19tYWluX18iOgogICAgc3lzLmV4aXQoYXN5bmNpby5ydW4obWFpbigpKSkK').decode("utf-8")
+
+_MODULE_BODY = _b64.b64decode(
+    "IiIiClAxLTYg5rex5bqm6ZuG5oiQ5rWL6K+VIOKAlCDpqozor4Hkv67lpI3nmoTovrnnvJjmoYjkvosKCjEuIOa1geW8j+WOu+mHjSDigJQg6aqM6K+B5LiN5Ye6546w6YeN5aSN5YaF5a65CjIuIGZpbmlzaCDkuovku7Yg4oCUIOmqjOivgeWTjeW6lOWujOaVtOS4lOWPquaYvuekuiAxIOasoQozLiDnqbogYXNzaXN0YW50IOWNoOS9jSDigJQg6aqM6K+BIExMTSDkuI3kvJrlm57pu5jorqTpl67lgJkKNC4g5aSa6L2u5a+56K+dIOKAlCDpqozor4HkuIrkuIvmlofkv53mjIEKNS4g5bel5YW36LCD55SoIOKAlCDpqozor4EgcHl0aG9uX2V4ZWN1dGUg6LeR5Ye6IEhlbGxvIHdvcmxkCjYuIFdvcmQg5paH5Lu255Sf5oiQIOKAlCDpqozor4EgLmRvY3gg6L6T5Ye6CjcuIOWkmuaooeWei+WIh+aNoiDigJQg6aqM6K+BIHF3ZW4zLTMyYiAvIHF3ZW4tbWF4IC8gcXdlbjMtY29kZXItZmxhc2gKIiIiCkJBQ0tFTkQgPSBvcy5lbnZpcm9uLmdldCgiREFUQV9BSV9CQVNFIiwgImh0dHA6Ly8xMjcuMC4wLjE6ODAwMCIpCktFWSA9IG9zLmVudmlyb24uZ2V0KCJEQVRBX0FJX1RFU1RfQVBJX0tFWSIsICJzay1SRVBMQUNFX1dJVEhfWU9VUl9URVNUX0tFWSIpICAjIHBsYWNlaG9sZGVyLCDnlKggZW52IOimhueblgpIRUFERVJTID0geyJBdXRob3JpemF0aW9uIjogZiJCZWFyZXIge0tFWX0iLCAiQ29udGVudC1UeXBlIjogImFwcGxpY2F0aW9uL2pzb24ifQpyZXN1bHRzOiBsaXN0W3R1cGxlW3N0ciwgYm9vbCwgc3RyXV0gPSBbXQppZiBfX25hbWVfXyA9PSAiX19tYWluX18iOgogICAgc3lzLmV4aXQoYXN5bmNpby5ydW4obWFpbigpKSkK"
+).decode("utf-8")
+
 
 def _run_module_body() -> None:
     """执行原顶层可执行代码, 把 ``sys.exit()`` 转成 ``SystemExit`` 异常."""
     _orig_exit = _sys.exit
+
     def _safe_exit(code=0):
         raise SystemExit(code)
+
     _sys.exit = _safe_exit
     try:
         exec(compile(_MODULE_BODY, __file__, "exec"), globals())
     finally:
         _sys.exit = _orig_exit
+
 
 if __name__ == "__main__":
     _run_module_body()

@@ -41,6 +41,8 @@ def _dict_to_msg(d: dict[str, Any]) -> ChatMessage:
         tool_call_id=d.get("tool_call_id"),
         name=d.get("name"),
     )
+
+
 import inspect
 import json
 from abc import ABC
@@ -87,10 +89,10 @@ class ReflectionResult:
     """
 
     is_confident: bool
-    confidence: float            # 0.0 - 1.0
-    issues: list[str]            # 发现的问题列表
-    rationale: str               # 反思的推理过程
-    iteration: int = 0           # 第几轮反思
+    confidence: float  # 0.0 - 1.0
+    issues: list[str]  # 发现的问题列表
+    rationale: str  # 反思的推理过程
+    iteration: int = 0  # 第几轮反思
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -129,7 +131,7 @@ class AgentConfig:
     stream: bool = True
     enable_context_management: bool = True
     enable_reflection: bool = False  # 新增: 是否启用 Self-Reflection
-    max_reflections: int = 2         # 新增: 最多反思次数(避免无限循环)
+    max_reflections: int = 2  # 新增: 最多反思次数(避免无限循环)
     reflection_threshold: float = 0.6  # 新增: 低于此 confidence 视为不可信
     reserve_output_tokens: int = 4096
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -253,8 +255,11 @@ class BaseAgent(ABC):
         except Exception as e:
             logger.warning(f"Self-Reflection LLM 调用失败,默认通过: {e}")
             return ReflectionResult(
-                is_confident=True, confidence=1.0, issues=[],
-                rationale=f"reflection failed: {e}", iteration=self.state.reflection_count,
+                is_confident=True,
+                confidence=1.0,
+                issues=[],
+                rationale=f"reflection failed: {e}",
+                iteration=self.state.reflection_count,
             )
 
         # 解析 JSON
@@ -287,13 +292,15 @@ class BaseAgent(ABC):
         start = text.find("{")
         end = text.rfind("}")
         if start >= 0 and end > start:
-            text = text[start:end + 1]
+            text = text[start : end + 1]
         try:
             data = json.loads(text)
         except json.JSONDecodeError:
             logger.warning(f"Reflection JSON 解析失败,fallback 通过: {text[:100]}")
             return ReflectionResult(
-                is_confident=True, confidence=0.7, issues=[],
+                is_confident=True,
+                confidence=0.7,
+                issues=[],
                 rationale="JSON 解析失败,默认通过",
             )
         try:
@@ -336,34 +343,36 @@ class BaseAgent(ABC):
         if self.config.enable_sub_agent and not any(
             s.get("function", {}).get("name") == "delegate_subagent" for s in schemas
         ):
-            schemas.append({
-                "type": "function",
-                "function": {
-                    "name": "delegate_subagent",
-                    "description": (
-                        "把子任务委派给一个 sub-agent。可选 role 是 'customer_service' / "
-                        "'finance_analyst' / 'secretary' / 'novel_writer'(不传则用 default "
-                        "配置),sub-agent 会套用该 role 的 system_prompt/tools/temperature, "
-                        "完全独立跑完后把结果作为 tool result 返回。\n"
-                        "适用场景:需要不同 persona 的专家回答、需要隔离 context、并行处理多个子问题。"
-                    ),
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "query": {
-                                "type": "string",
-                                "description": "交给 sub-agent 的具体子任务/问题",
+            schemas.append(
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "delegate_subagent",
+                        "description": (
+                            "把子任务委派给一个 sub-agent。可选 role 是 'customer_service' / "
+                            "'finance_analyst' / 'secretary' / 'novel_writer'(不传则用 default "
+                            "配置),sub-agent 会套用该 role 的 system_prompt/tools/temperature, "
+                            "完全独立跑完后把结果作为 tool result 返回。\n"
+                            "适用场景:需要不同 persona 的专家回答、需要隔离 context、并行处理多个子问题。"
+                        ),
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "query": {
+                                    "type": "string",
+                                    "description": "交给 sub-agent 的具体子任务/问题",
+                                },
+                                "role": {
+                                    "type": "string",
+                                    "description": "可选: 套用的 preset role (customer_service / finance_analyst / secretary / novel_writer)",
+                                    "enum": ["customer_service", "finance_analyst", "secretary", "novel_writer"],
+                                },
                             },
-                            "role": {
-                                "type": "string",
-                                "description": "可选: 套用的 preset role (customer_service / finance_analyst / secretary / novel_writer)",
-                                "enum": ["customer_service", "finance_analyst", "secretary", "novel_writer"],
-                            },
+                            "required": ["query"],
                         },
-                        "required": ["query"],
                     },
-                },
-            })
+                }
+            )
         return schemas
 
     def _build_context_message(self) -> ChatMessage | None:
@@ -503,12 +512,14 @@ class BaseAgent(ABC):
                 self.state.messages.append(assistant_msg)
                 # 记录工具调用历史(供 trace / response 暴露)
                 for tc in response.tool_calls:
-                    self.state.tool_call_log.append({
-                        "iteration": self.state.iteration_count,
-                        "tool_call_id": tc.get("id"),
-                        "name": tc.get("function", {}).get("name"),
-                        "arguments": tc.get("function", {}).get("arguments"),
-                    })
+                    self.state.tool_call_log.append(
+                        {
+                            "iteration": self.state.iteration_count,
+                            "tool_call_id": tc.get("id"),
+                            "name": tc.get("function", {}).get("name"),
+                            "arguments": tc.get("function", {}).get("arguments"),
+                        }
+                    )
 
                 for tool_call in response.tool_calls:
                     tool_name = tool_call["function"]["name"]
@@ -518,10 +529,7 @@ class BaseAgent(ABC):
                         arguments = {}
 
                     # P1-2: Human-in-the-Loop — 高风险 tool 调前暂停等审批
-                    if (
-                        self.config.require_approval_for_tools
-                        and tool_name in self.config.require_approval_for_tools
-                    ):
+                    if self.config.require_approval_for_tools and tool_name in self.config.require_approval_for_tools:
                         approved = await self._await_human_approval(
                             tool_name=tool_name,
                             arguments=arguments,
@@ -569,10 +577,7 @@ class BaseAgent(ABC):
 
             # ── Self-Reflection 注入点 ──
             # LLM 返回了最终答案(无 tool_call),先 reflection 一次
-            if (
-                self.config.enable_reflection
-                and self.state.reflection_count < self.config.max_reflections
-            ):
+            if self.config.enable_reflection and self.state.reflection_count < self.config.max_reflections:
                 reflection = await self.reflect(response.content, self.state.messages)
                 if not reflection.is_confident and reflection.issues:
                     # 把 reflection 反馈注入到 messages,让 LLM 重新回答
@@ -589,9 +594,7 @@ class BaseAgent(ABC):
                             content=response.content,
                         )
                     )
-                    self.state.messages.append(
-                        ChatMessage(role="user", content=feedback)
-                    )
+                    self.state.messages.append(ChatMessage(role="user", content=feedback))
                     continue  # 让 LLM 重新生成
 
             self.state.messages.append(
@@ -613,9 +616,7 @@ class BaseAgent(ABC):
                 "content": response.content,
                 "run_id": self.run_id,
                 "iterations": self.state.iteration_count,
-                "reflections": [
-                    r.to_dict() for r in self.state.reflection_log
-                ],
+                "reflections": [r.to_dict() for r in self.state.reflection_log],
                 "tool_calls": list(self.state.tool_call_log),
                 "total_tokens": self.state.total_tokens,
                 "usage": response.usage,
@@ -633,7 +634,6 @@ class BaseAgent(ABC):
             max_iterations=self.config.max_iterations,
             iterations=self.state.iteration_count,
         )
-
 
     # ── P1-3: Sub-Agent 委派 ──────────────────────────────────
 
@@ -672,16 +672,14 @@ class BaseAgent(ABC):
         """
         # 1) 生成 sub-agent run_id
         parent_run_id = self.run_id or "root"
-        sub_run_id = (
-            run_id
-            or f"{parent_run_id}/sub-{int(_time.time() * 1000)}-{uuid.uuid4().hex[:8]}"
-        )
+        sub_run_id = run_id or f"{parent_run_id}/sub-{int(_time.time() * 1000)}-{uuid.uuid4().hex[:8]}"
 
         # 2) 解析 preset(如果有 role)
         preset_def: dict[str, Any] | None = None
         if role:
             try:
                 from data_ai.plugins.agents import get_preset
+
                 preset_def = get_preset(role) or {}
             except Exception as exc:
                 logger.warning(f"delegate: preset role={role!r} 解析失败,fallback: {exc!r}")
@@ -690,12 +688,20 @@ class BaseAgent(ABC):
         # 3) 构造 sub-agent config(继承 parent + 覆盖 preset)
         sub_config = AgentConfig(
             model_name=self.config.model_name,
-            system_prompt=preset_def.get("system_prompt", self.config.system_prompt) if preset_def else self.config.system_prompt,
-            max_iterations=int(preset_def.get("max_iterations", self.config.max_iterations)) if preset_def else self.config.max_iterations,
-            temperature=float(preset_def.get("temperature", self.config.temperature)) if preset_def else self.config.temperature,
+            system_prompt=preset_def.get("system_prompt", self.config.system_prompt)
+            if preset_def
+            else self.config.system_prompt,
+            max_iterations=int(preset_def.get("max_iterations", self.config.max_iterations))
+            if preset_def
+            else self.config.max_iterations,
+            temperature=float(preset_def.get("temperature", self.config.temperature))
+            if preset_def
+            else self.config.temperature,
             stream=False,  # sub-agent 走非流式,串到 parent 的 tool result
             enable_context_management=self.config.enable_context_management,
-            enable_reflection=bool(preset_def.get("reflection", self.config.enable_reflection)) if preset_def else self.config.enable_reflection,
+            enable_reflection=bool(preset_def.get("reflection", self.config.enable_reflection))
+            if preset_def
+            else self.config.enable_reflection,
             max_reflections=self.config.max_reflections,
             reflection_threshold=self.config.reflection_threshold,
             reserve_output_tokens=self.config.reserve_output_tokens,
@@ -721,10 +727,7 @@ class BaseAgent(ABC):
         )
 
         # 5) 跑 sub-agent
-        logger.info(
-            f"[delegate] parent={parent_run_id} sub={sub_run_id} role={role!r} "
-            f"query={query[:80]!r}"
-        )
+        logger.info(f"[delegate] parent={parent_run_id} sub={sub_run_id} role={role!r} " f"query={query[:80]!r}")
         try:
             # P1-3: 把 parent_run_id/preset_role 写进 sub-agent state.metadata.runtime,
             # 这样 _save_checkpoint 会自动存到 checkpoint.metadata(供 /sub_runs 端点查)
@@ -798,6 +801,7 @@ class BaseAgent(ABC):
         P1-7: delegate 的安全包装 — 失败不抛,返回 dict with error info
         """
         import uuid as _uuid
+
         trace_id = _uuid.uuid4().hex[:12]
         query = q.get("query", "")
         role = q.get("role")
@@ -918,6 +922,7 @@ class BaseAgent(ABC):
 
         if self._checkpoint_store is None:
             from .checkpoint import get_checkpoint_store
+
             self._checkpoint_store = get_checkpoint_store()
         ck = await self._checkpoint_store.load(run_id)
         if ck is None:
@@ -943,9 +948,7 @@ class BaseAgent(ABC):
         self.state.messages = [_dict_to_msg(d) for d in ck.messages]
         self.state.iteration_count = ck.iteration_count
         self.state.reflection_count = ck.reflection_count
-        self.state.reflection_log = [
-            ReflectionResult(**r) for r in ck.reflection_log
-        ] if ck.reflection_log else []
+        self.state.reflection_log = [ReflectionResult(**r) for r in ck.reflection_log] if ck.reflection_log else []
         self.state.tool_call_log = list(ck.tool_call_log)
         self.state.status = AgentStatus.RUNNING if hasattr(AgentStatus, "RUNNING") else AgentStatus.THINKING
         self.state.metadata["checkpoint_created_at"] = ck.created_at
@@ -1021,12 +1024,14 @@ class BaseAgent(ABC):
                 )
                 self.state.messages.append(assistant_msg)
                 for tc in response.tool_calls:
-                    self.state.tool_call_log.append({
-                        "iteration": self.state.iteration_count,
-                        "tool_call_id": tc.get("id"),
-                        "name": tc.get("function", {}).get("name"),
-                        "arguments": tc.get("function", {}).get("arguments"),
-                    })
+                    self.state.tool_call_log.append(
+                        {
+                            "iteration": self.state.iteration_count,
+                            "tool_call_id": tc.get("id"),
+                            "name": tc.get("function", {}).get("name"),
+                            "arguments": tc.get("function", {}).get("arguments"),
+                        }
+                    )
 
                 for tool_call in response.tool_calls:
                     tool_name = tool_call["function"]["name"]
@@ -1035,10 +1040,7 @@ class BaseAgent(ABC):
                     except json.JSONDecodeError:
                         arguments = {}
 
-                    if (
-                        self.config.require_approval_for_tools
-                        and tool_name in self.config.require_approval_for_tools
-                    ):
+                    if self.config.require_approval_for_tools and tool_name in self.config.require_approval_for_tools:
                         approved = await self._await_human_approval(
                             tool_name=tool_name,
                             arguments=arguments,
@@ -1075,10 +1077,7 @@ class BaseAgent(ABC):
                 await self._save_checkpoint()
                 continue
 
-            if (
-                self.config.enable_reflection
-                and self.state.reflection_count < self.config.max_reflections
-            ):
+            if self.config.enable_reflection and self.state.reflection_count < self.config.max_reflections:
                 reflection = await self.reflect(response.content, self.state.messages)
                 if not reflection.is_confident and reflection.issues:
                     feedback = (
@@ -1295,7 +1294,7 @@ class BaseAgent(ABC):
                             if new_content == accumulated_content:
                                 continue
                             if new_content.startswith(accumulated_content):
-                                new_content = new_content[len(accumulated_content):]
+                                new_content = new_content[len(accumulated_content) :]
                                 if not new_content:
                                     continue
                         accumulated_content += new_content
@@ -1421,5 +1420,6 @@ class DefaultAgent(BaseAgent):
     之所以独立成一个类,是因为 BaseAgent 是 ABC,但 run() 已完整实现,需要一个非
     abstract 的具体类给 sub-agent delegate() 用(避免直接 `BaseAgent(...)`)。
     """
+
     def get_system_prompt(self) -> str:
         return self._default_system_prompt()

@@ -333,7 +333,9 @@ class CompensationEngine:
                 raise ValueError(f"policy not found: {breach.policy_id}")
             credit_pct, _tier = policy.calculate_credit_pct(breach.actual_pct)
             if credit_pct <= 0:
-                raise ValueError(f"no credit applicable: actual={breach.actual_pct}%, target={policy.target_availability_pct}%")
+                raise ValueError(
+                    f"no credit applicable: actual={breach.actual_pct}%, target={policy.target_availability_pct}%"
+                )
             credit_amount = monthly_fee_usd * (credit_pct / 100.0)
             credit = Credit(
                 breach_id=breach_id,
@@ -497,14 +499,14 @@ class CompensationEngine:
         """客户视角: 期间内的可用率 + 累计赔付"""
         with self._lock:
             breaches = [
-                b for b in self._breaches.values()
-                if b.tenant_id == tenant_id
-                and period_start <= b.detected_at <= period_end
+                b
+                for b in self._breaches.values()
+                if b.tenant_id == tenant_id and period_start <= b.detected_at <= period_end
             ]
             credits = [
-                c for c in self._credits.values()
-                if c.tenant_id == tenant_id
-                and period_start <= c.created_at <= period_end
+                c
+                for c in self._credits.values()
+                if c.tenant_id == tenant_id and period_start <= c.created_at <= period_end
             ]
             total_credit = sum(c.credit_amount_usd for c in credits)
             applied_credit = sum(
@@ -526,12 +528,8 @@ class CompensationEngine:
                 "total_credit_amount_usd": round(total_credit, 2),
                 "applied_credit_amount_usd": round(applied_credit, 2),
                 "avg_actual_availability_pct": round(avg_actual, 4),
-                "breaches_by_severity": {
-                    s.value: sum(1 for b in breaches if b.severity == s) for s in BreachSeverity
-                },
-                "credits_by_status": {
-                    s.value: sum(1 for c in credits if c.status == s) for s in CreditStatus
-                },
+                "breaches_by_severity": {s.value: sum(1 for b in breaches if b.severity == s) for s in BreachSeverity},
+                "credits_by_status": {s.value: sum(1 for c in credits if c.status == s) for s in CreditStatus},
             }
 
     def stats(self) -> dict[str, Any]:
@@ -574,9 +572,7 @@ class CompensationEngine:
                 "credits": {k: v.to_dict() for k, v in self._credits.items()},
                 "disputes": {k: v.to_dict() for k, v in self._disputes.items()},
             }
-            self._persist_path.write_text(
-                json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
-            )
+            self._persist_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         except Exception:
             pass
 

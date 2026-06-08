@@ -1,12 +1,7 @@
-
 from __future__ import annotations
-
-import sys
 
 # Playwright sync API
 from playwright.sync_api import sync_playwright
-
-
 
 
 def _check(name: str, cond: bool, detail: str = "") -> None:
@@ -47,8 +42,6 @@ def test_dashboard() -> None:
         browser.close()
 
 
-
-
 # ── 2. /chat 输入 → 发送 → 流式输出 ────────
 
 
@@ -84,8 +77,6 @@ def test_chat_streaming() -> None:
         browser.close()
 
 
-
-
 # ── 3. /agents 列表 + 详情 ────────────────
 
 
@@ -108,8 +99,6 @@ def test_agents_page() -> None:
         browser.close()
 
 
-
-
 # ── 4. /team 列表 ──────────────────────
 
 
@@ -124,8 +113,6 @@ def test_team_page() -> None:
         body = page.locator("body").inner_text()
         _check("Team 页加载", len(body) > 100, f"len={len(body)}")
         browser.close()
-
-
 
 
 # ── 5. /tools 列表 ─────────────────────
@@ -147,8 +134,6 @@ def test_tools_page() -> None:
         browser.close()
 
 
-
-
 # ── 6. /sandbox ────────────────────────
 
 
@@ -163,8 +148,6 @@ def test_sandbox_page() -> None:
         body = page.locator("body").inner_text()
         _check("Sandbox 页加载", len(body) > 100, f"len={len(body)}")
         browser.close()
-
-
 
 
 # ── 7. /rag ───────────────────────────
@@ -183,8 +166,6 @@ def test_rag_page() -> None:
         browser.close()
 
 
-
-
 # ── 8. /memory ───────────────────────
 
 
@@ -199,8 +180,6 @@ def test_memory_page() -> None:
         body = page.locator("body").inner_text()
         _check("Memory 页加载", len(body) > 100, f"len={len(body)}")
         browser.close()
-
-
 
 
 # ── 9. /skills ───────────────────────
@@ -219,8 +198,6 @@ def test_skills_page() -> None:
         browser.close()
 
 
-
-
 # ── 10. /office/word ─────────────────
 
 
@@ -235,8 +212,6 @@ def test_office_word() -> None:
         body = page.locator("body").inner_text()
         _check("Word 页加载", len(body) > 100, f"len={len(body)}")
         browser.close()
-
-
 
 
 # ── 11. /office/ppt ──────────────────
@@ -255,8 +230,6 @@ def test_office_ppt() -> None:
         browser.close()
 
 
-
-
 # ── 12. /office/excel ────────────────
 
 
@@ -273,8 +246,6 @@ def test_office_excel() -> None:
         browser.close()
 
 
-
-
 # ── 13. /office/pdf ─────────────────
 
 
@@ -289,8 +260,6 @@ def test_office_pdf() -> None:
         body = page.locator("body").inner_text()
         _check("PDF 页加载", len(body) > 100, f"len={len(body)}")
         browser.close()
-
-
 
 
 # ── 14. /models ────────────────────
@@ -312,8 +281,6 @@ def test_models_page() -> None:
         browser.close()
 
 
-
-
 # ── 15. /settings ──────────────────
 
 
@@ -330,8 +297,6 @@ def test_settings_page() -> None:
         browser.close()
 
 
-
-
 # ── 16. /notifications ─────────────
 
 
@@ -346,8 +311,6 @@ def test_notifications_page() -> None:
         body = page.locator("body").inner_text()
         _check("Notifications 页加载", len(body) > 100, f"len={len(body)}")
         browser.close()
-
-
 
 
 # ── 17. 复杂场景: 多轮对话 + 工具调用 ──
@@ -427,9 +390,11 @@ def test_complex_conversation() -> None:
                     # 用 mouse 点击中心点
                     box = opt.bounding_box()
                     if box:
-                        page.mouse.click(box["x"] + box["width"]/2, box["y"] + box["height"]/2)
+                        page.mouse.click(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
                     page.wait_for_timeout(800)
-            current_model2 = page.locator("[role='combobox']").first.inner_text() if model_btn.is_visible(timeout=500) else ""
+            current_model2 = (
+                page.locator("[role='combobox']").first.inner_text() if model_btn.is_visible(timeout=500) else ""
+            )
             print(f"    [setup] model now: {current_model2!r}")
         except Exception as e:
             print(f"    [setup] model select failed: {e}")
@@ -459,8 +424,6 @@ def test_complex_conversation() -> None:
         _check("第 3 轮响应 (追问)", len(body3) > 1100, f"body len={len(body3)}")
 
         browser.close()
-
-
 
 
 # ── 18. 侧边栏点击切换 ─────────────
@@ -501,8 +464,6 @@ def test_sidebar_navigation() -> None:
         browser.close()
 
 
-
-
 # ── 19. 控制台无 JS 错误 ───────────
 
 
@@ -524,8 +485,6 @@ def test_no_console_errors() -> None:
         browser.close()
 
 
-
-
 # ── 20. /office/word 文件生成 (模拟用户操作) ──
 
 
@@ -545,14 +504,17 @@ def test_office_word_generate() -> None:
         # 使用 sandbox 临时目录
         import tempfile
         import urllib.request
+
         tmp_dir = tempfile.mkdtemp(prefix="e2e_word_")
         file_path = f"{tmp_dir}/test_frontend.docx"
-        payload = _json.dumps({
-            "file_path": file_path,
-            "content": "这是由前端 E2E 测试自动生成的 Word 文档。\n\nDATA-AI 系统: 第 1 段。\n\nDATA-AI 系统: 第 2 段。",
-            "title": "E2E 测试文档",
-            "format": "text",
-        }).encode()
+        payload = _json.dumps(
+            {
+                "file_path": file_path,
+                "content": "这是由前端 E2E 测试自动生成的 Word 文档。\n\nDATA-AI 系统: 第 1 段。\n\nDATA-AI 系统: 第 2 段。",
+                "title": "E2E 测试文档",
+                "format": "text",
+            }
+        ).encode()
         req = urllib.request.Request(
             f"{BACKEND}/v1/office/word/write",
             data=payload,
@@ -561,18 +523,24 @@ def test_office_word_generate() -> None:
         try:
             with urllib.request.urlopen(req, timeout=15) as r:
                 result = _json.load(r)
-                has_file = "file" in result or "path" in result or "file_path" in result or "docx_url" in result or "filename" in result
+                has_file = (
+                    "file" in result
+                    or "path" in result
+                    or "file_path" in result
+                    or "docx_url" in result
+                    or "filename" in result
+                )
                 _check("Word 文档生成 API 成功", has_file, f"result={result}")
         except Exception as e:
             _check("Word 文档生成 API 成功", False, f"err={e}")
 
         # 验证页面也有相关按钮(用户可视化操作)
         # 按钮文字可能: 生成/写/创建/新建/导出/保存
-        write_btn_count = page.locator("button:has-text('生成'), button:has-text('写'), button:has-text('创建'), button:has-text('新建'), button:has-text('导出'), button:has-text('保存')").count()
+        write_btn_count = page.locator(
+            "button:has-text('生成'), button:has-text('写'), button:has-text('创建'), button:has-text('新建'), button:has-text('导出'), button:has-text('保存')"
+        ).count()
         _check("Word 页有生成/写/创建按钮", write_btn_count > 0, f"count={write_btn_count}")
         browser.close()
-
-
 
 
 # ── 21. Models API + 实际生成回答(复杂场景) ──
@@ -582,6 +550,7 @@ def test_api_models_and_chat() -> None:
     print("\n[21] 后端 API: /v1/models 60 个 + /v1/chat 真实响应")
     import json
     import urllib.request
+
     # 1) 拉模型列表
     req = urllib.request.Request(f"{BACKEND}/v1/models")
     with urllib.request.urlopen(req, timeout=10) as r:
@@ -635,8 +604,6 @@ def test_api_models_and_chat() -> None:
         _check("SSE 流式输出", False, f"err={e}")
 
 
-
-
 # ── 22. /models 页面 + 60 个模型卡片可见 ──
 
 
@@ -658,34 +625,39 @@ def test_models_page_listing() -> None:
         # 应有 60 个模型相关数字
         # look for "60" or close number
         import re
-        nums = re.findall(r'(\d+)\s*个模型', body)
+
+        nums = re.findall(r"(\d+)\s*个模型", body)
         _check("模型数 ≥ 50", len(nums) > 0 and int(nums[0]) >= 50, f"nums={nums}")
         browser.close()
-
-
 
 
 # ── 总结 ────────────────────────────
 
 
-
-
 # ── pytest 集成 (auto) ────────────────────────────────────
 import base64 as _b64
 import sys as _sys
+
 import pytest as _pytest
-_MODULE_BODY = _b64.b64decode('IiIiCkRBVEEtQUkg5rex5bqmIEUyRSDmtYvor5Ug4oCUIOaooeaLn+aZrumAmueUqOaIt+WcqOWJjeerr+WujOaVtOaTjeS9nAoK6KaG55uWOgoxLiDliqDovb0gLyDihpIgZGFzaGJvYXJkCjIuIC9jaGF0IOKGkiDovpPlhaUg4oaSIOWPkemAgSDihpIg5rWB5byP6L6T5Ye6IOKGkiDmlofku7bkuqflh7oKMy4gL2FnZW50cyDihpIg5YiX6KGoIC8g6K+m5oOFCjQuIC90ZWFtIOKGkiDliJfooaggLyDor6bmg4UgLyDlhbHor4bnrZbnlaUKNS4gL3Rvb2xzIOKGkiDliJfooaggLyDmiafooYwKNi4gL3NhbmRib3gg4oaSIOWIl+ihqCAvIOWIm+W7ugo3LiAvcmFnIOKGkiDkuIrkvKAgLyDmo4DntKIKOC4gL21lbW9yeSDihpIg5re75YqgIC8g5pCc57SiCjkuIC9za2lsbHMg4oaSIOWIl+ihqAoxMC4gL29mZmljZS93b3JkIOKGkiDnlJ/miJAgZG9jeAoxMS4gL29mZmljZS9wcHQg4oaSIOeUn+aIkCBwcHR4CjEyLiAvb2ZmaWNlL2V4Y2VsIOKGkiDnlJ/miJAgeGxzeAoxMy4gL29mZmljZS9wZGYg4oaSIOeUn+aIkCBwZGYKMTQuIC9tb2RlbHMg4oaSIOaooeWei+WIl+ihqCArIOWBpeW6twoxNS4gL3NldHRpbmdzIOKGkiDorr7nva4KMTYuIC9ub3RpZmljYXRpb25zIOKGkiDpgJrnn6UKMTcuIOWkjeadguWcuuaZrzog5aSa6L2u5a+56K+dICsg5bel5YW36LCD55SoICsg6ZW/5LiK5LiL5paHICsgc3ViLWFnZW50CiIiIgpCQUNLRU5EID0gImh0dHA6Ly8xMjcuMC4wLjE6ODAwMCIKRlJPTlRFTkQgPSAiaHR0cDovLzEyNy4wLjAuMTo1MTgwIgpwYXNzZWQgPSAwCmZhaWxlZCA9IDAKZmFpbF9tc2dzOiBsaXN0W3N0cl0gPSBbXQp0ZXN0X2Rhc2hib2FyZCgpCnRlc3RfY2hhdF9zdHJlYW1pbmcoKQp0ZXN0X2FnZW50c19wYWdlKCkKdGVzdF90ZWFtX3BhZ2UoKQp0ZXN0X3Rvb2xzX3BhZ2UoKQp0ZXN0X3NhbmRib3hfcGFnZSgpCnRlc3RfcmFnX3BhZ2UoKQp0ZXN0X21lbW9yeV9wYWdlKCkKdGVzdF9za2lsbHNfcGFnZSgpCnRlc3Rfb2ZmaWNlX3dvcmQoKQp0ZXN0X29mZmljZV9wcHQoKQp0ZXN0X29mZmljZV9leGNlbCgpCnRlc3Rfb2ZmaWNlX3BkZigpCnRlc3RfbW9kZWxzX3BhZ2UoKQp0ZXN0X3NldHRpbmdzX3BhZ2UoKQp0ZXN0X25vdGlmaWNhdGlvbnNfcGFnZSgpCnRlc3RfY29tcGxleF9jb252ZXJzYXRpb24oKQp0ZXN0X3NpZGViYXJfbmF2aWdhdGlvbigpCnRlc3Rfbm9fY29uc29sZV9lcnJvcnMoKQp0ZXN0X29mZmljZV93b3JkX2dlbmVyYXRlKCkKdGVzdF9hcGlfbW9kZWxzX2FuZF9jaGF0KCkKdGVzdF9tb2RlbHNfcGFnZV9saXN0aW5nKCkKcHJpbnQoIlxuIiArICI9IiAqIDYwKQpwcmludChmIkUyRSDliY3nq6/mtYvor5U6IHtwYXNzZWR9IHBhc3NlZCwge2ZhaWxlZH0gZmFpbGVkIikKcHJpbnQoIj0iICogNjApCmlmIGZhaWxlZDoKICAgIHByaW50KCLlpLHotKXor6bmg4U6IikKICAgIGZvciBtIGluIGZhaWxfbXNnczoKICAgICAgICBwcmludChmIiAgLSB7bX0iKQogICAgc3lzLmV4aXQoMSkKc3lzLmV4aXQoMCkK').decode("utf-8")
+
+_MODULE_BODY = _b64.b64decode(
+    "IiIiCkRBVEEtQUkg5rex5bqmIEUyRSDmtYvor5Ug4oCUIOaooeaLn+aZrumAmueUqOaIt+WcqOWJjeerr+WujOaVtOaTjeS9nAoK6KaG55uWOgoxLiDliqDovb0gLyDihpIgZGFzaGJvYXJkCjIuIC9jaGF0IOKGkiDovpPlhaUg4oaSIOWPkemAgSDihpIg5rWB5byP6L6T5Ye6IOKGkiDmlofku7bkuqflh7oKMy4gL2FnZW50cyDihpIg5YiX6KGoIC8g6K+m5oOFCjQuIC90ZWFtIOKGkiDliJfooaggLyDor6bmg4UgLyDlhbHor4bnrZbnlaUKNS4gL3Rvb2xzIOKGkiDliJfooaggLyDmiafooYwKNi4gL3NhbmRib3gg4oaSIOWIl+ihqCAvIOWIm+W7ugo3LiAvcmFnIOKGkiDkuIrkvKAgLyDmo4DntKIKOC4gL21lbW9yeSDihpIg5re75YqgIC8g5pCc57SiCjkuIC9za2lsbHMg4oaSIOWIl+ihqAoxMC4gL29mZmljZS93b3JkIOKGkiDnlJ/miJAgZG9jeAoxMS4gL29mZmljZS9wcHQg4oaSIOeUn+aIkCBwcHR4CjEyLiAvb2ZmaWNlL2V4Y2VsIOKGkiDnlJ/miJAgeGxzeAoxMy4gL29mZmljZS9wZGYg4oaSIOeUn+aIkCBwZGYKMTQuIC9tb2RlbHMg4oaSIOaooeWei+WIl+ihqCArIOWBpeW6twoxNS4gL3NldHRpbmdzIOKGkiDorr7nva4KMTYuIC9ub3RpZmljYXRpb25zIOKGkiDpgJrnn6UKMTcuIOWkjeadguWcuuaZrzog5aSa6L2u5a+56K+dICsg5bel5YW36LCD55SoICsg6ZW/5LiK5LiL5paHICsgc3ViLWFnZW50CiIiIgpCQUNLRU5EID0gImh0dHA6Ly8xMjcuMC4wLjE6ODAwMCIKRlJPTlRFTkQgPSAiaHR0cDovLzEyNy4wLjAuMTo1MTgwIgpwYXNzZWQgPSAwCmZhaWxlZCA9IDAKZmFpbF9tc2dzOiBsaXN0W3N0cl0gPSBbXQp0ZXN0X2Rhc2hib2FyZCgpCnRlc3RfY2hhdF9zdHJlYW1pbmcoKQp0ZXN0X2FnZW50c19wYWdlKCkKdGVzdF90ZWFtX3BhZ2UoKQp0ZXN0X3Rvb2xzX3BhZ2UoKQp0ZXN0X3NhbmRib3hfcGFnZSgpCnRlc3RfcmFnX3BhZ2UoKQp0ZXN0X21lbW9yeV9wYWdlKCkKdGVzdF9za2lsbHNfcGFnZSgpCnRlc3Rfb2ZmaWNlX3dvcmQoKQp0ZXN0X29mZmljZV9wcHQoKQp0ZXN0X29mZmljZV9leGNlbCgpCnRlc3Rfb2ZmaWNlX3BkZigpCnRlc3RfbW9kZWxzX3BhZ2UoKQp0ZXN0X3NldHRpbmdzX3BhZ2UoKQp0ZXN0X25vdGlmaWNhdGlvbnNfcGFnZSgpCnRlc3RfY29tcGxleF9jb252ZXJzYXRpb24oKQp0ZXN0X3NpZGViYXJfbmF2aWdhdGlvbigpCnRlc3Rfbm9fY29uc29sZV9lcnJvcnMoKQp0ZXN0X29mZmljZV93b3JkX2dlbmVyYXRlKCkKdGVzdF9hcGlfbW9kZWxzX2FuZF9jaGF0KCkKdGVzdF9tb2RlbHNfcGFnZV9saXN0aW5nKCkKcHJpbnQoIlxuIiArICI9IiAqIDYwKQpwcmludChmIkUyRSDliY3nq6/mtYvor5U6IHtwYXNzZWR9IHBhc3NlZCwge2ZhaWxlZH0gZmFpbGVkIikKcHJpbnQoIj0iICogNjApCmlmIGZhaWxlZDoKICAgIHByaW50KCLlpLHotKXor6bmg4U6IikKICAgIGZvciBtIGluIGZhaWxfbXNnczoKICAgICAgICBwcmludChmIiAgLSB7bX0iKQogICAgc3lzLmV4aXQoMSkKc3lzLmV4aXQoMCkK"
+).decode("utf-8")
+
 
 def _run_module_body() -> None:
     """执行原顶层可执行代码, 把 ``sys.exit()`` 转成 ``SystemExit`` 异常."""
     _orig_exit = _sys.exit
+
     def _safe_exit(code=0):
         raise SystemExit(code)
+
     _sys.exit = _safe_exit
     try:
         exec(compile(_MODULE_BODY, __file__, "exec"), globals())
     finally:
         _sys.exit = _orig_exit
+
 
 if __name__ == "__main__":
     _run_module_body()

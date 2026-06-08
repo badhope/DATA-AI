@@ -226,15 +226,21 @@ def chat(
             # 单条模式
             if stream:
                 for chunk in client.chat_stream(
-                    message, model=model, system=system or None, enable_thinking=enable_thinking,
+                    message,
+                    model=model,
+                    system=system or None,
+                    enable_thinking=enable_thinking,
                     max_tokens=max_tokens,
                 ):
                     console.print(chunk, end="")
                 console.print()
             else:
                 r = client.chat(
-                    message, model=model, system=system or None,
-                    enable_thinking=enable_thinking, max_tokens=max_tokens,
+                    message,
+                    model=model,
+                    system=system or None,
+                    enable_thinking=enable_thinking,
+                    max_tokens=max_tokens,
                 )
                 _print_json(r)
             return
@@ -258,7 +264,9 @@ def chat(
                     console.print("[bold blue]Assistant[/bold blue]: ", end="")
                     full = ""
                     for chunk in client.chat_stream(
-                        msgs, model=model, enable_thinking=enable_thinking,
+                        msgs,
+                        model=model,
+                        enable_thinking=enable_thinking,
                         max_tokens=max_tokens,
                     ):
                         console.print(chunk, end="")
@@ -268,7 +276,9 @@ def chat(
                 else:
                     with console.status("[bold blue]Thinking...[/bold blue]"):
                         r = client.chat(
-                            msgs, model=model, enable_thinking=enable_thinking,
+                            msgs,
+                            model=model,
+                            enable_thinking=enable_thinking,
                             max_tokens=max_tokens,
                         )
                     content = r.get("choices", [{}])[0].get("message", {}).get("content", "")
@@ -420,7 +430,10 @@ def agent_create(
 
         client = create_api_client(base_url=base_url, api_key=backend_key)
         r = client.create_agent(
-            name=name, model=model, system_prompt=system, description=description,
+            name=name,
+            model=model,
+            system_prompt=system,
+            description=description,
             tool_names=[t.strip() for t in tools_.split(",") if t.strip()],
             preset=preset,
         )
@@ -631,7 +644,8 @@ def memory_add(
 
         client = create_api_client(base_url=base_url, api_key=backend_key)
         r = client.create_memory(
-            content=content, type=type,
+            content=content,
+            type=type,
             tags=[t.strip() for t in tags.split(",") if t.strip()],
             importance=importance,
         )
@@ -722,7 +736,9 @@ def skill_create(
 
         client = create_api_client(base_url=base_url, api_key=backend_key)
         r = client.create_skill(
-            name=name, description=description, category=category,
+            name=name,
+            description=description,
+            category=category,
             implementation=implementation,
         )
         _print_json(r)
@@ -1047,8 +1063,13 @@ def mcp_create(
                 k, v = kv.split("=", 1)
                 env_dict[k.strip()] = v.strip()
         r = client.create_mcp_server(
-            name=name, type=type, command=command, url=url,
-            args=arg_list, env=env_dict, description=description,
+            name=name,
+            type=type,
+            command=command,
+            url=url,
+            args=arg_list,
+            env=env_dict,
+            description=description,
         )
         _print_json(r)
     except Exception as e:
@@ -1105,8 +1126,11 @@ def reasoning_sequential(
 
         client = create_api_client(base_url=base_url, api_key=backend_key)
         r = client.reasoning_sequential(
-            question, context=context, max_steps=max_steps,
-            use_llm=not no_llm, model=model,
+            question,
+            context=context,
+            max_steps=max_steps,
+            use_llm=not no_llm,
+            model=model,
         )
         _print_json(r)
     except Exception as e:

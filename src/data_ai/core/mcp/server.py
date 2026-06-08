@@ -41,8 +41,12 @@ BUILTIN_MCP_SERVERS: list[dict[str, Any]] = [
         "enabled": True,
         "is_builtin": True,
         "tools": [
-            "echo", "get_current_time", "list_directory",
-            "read_text_file", "calculate", "word_count",
+            "echo",
+            "get_current_time",
+            "list_directory",
+            "read_text_file",
+            "calculate",
+            "word_count",
         ],
     },
     {
@@ -214,13 +218,15 @@ def patch_builtin_servers_from_schema(schema_path: str | Path) -> int:
         idx = next((i for i, s in enumerate(BUILTIN_MCP_SERVERS) if s["id"] == f"mcp-{sid}"), -1)
         if idx < 0:
             continue
-        BUILTIN_MCP_SERVERS[idx].update({
-            "name": meta.get("name", BUILTIN_MCP_SERVERS[idx]["name"]),
-            "description": meta.get("description", BUILTIN_MCP_SERVERS[idx]["description"]),
-            "type": meta.get("type", BUILTIN_MCP_SERVERS[idx]["type"]),
-            "command": meta.get("command", BUILTIN_MCP_SERVERS[idx]["command"]),
-            "args": meta.get("args", BUILTIN_MCP_SERVERS[idx]["args"]),
-            "icon": meta.get("icon", BUILTIN_MCP_SERVERS[idx].get("icon", "🔌")),
-        })
+        BUILTIN_MCP_SERVERS[idx].update(
+            {
+                "name": meta.get("name", BUILTIN_MCP_SERVERS[idx]["name"]),
+                "description": meta.get("description", BUILTIN_MCP_SERVERS[idx]["description"]),
+                "type": meta.get("type", BUILTIN_MCP_SERVERS[idx]["type"]),
+                "command": meta.get("command", BUILTIN_MCP_SERVERS[idx]["command"]),
+                "args": meta.get("args", BUILTIN_MCP_SERVERS[idx]["args"]),
+                "icon": meta.get("icon", BUILTIN_MCP_SERVERS[idx].get("icon", "🔌")),
+            }
+        )
         count += 1
     return count

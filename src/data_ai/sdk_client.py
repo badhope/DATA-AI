@@ -218,6 +218,7 @@ class DataAIClient:
                 # 第 1-2 次重试,加短退避
                 if attempt < 2:
                     import time as _t
+
                     _t.sleep(0.2 * (attempt + 1))
                     continue
                 # 失败抛错
@@ -507,7 +508,9 @@ class DataAIClient:
     def get_agent_run(self, run_id: str) -> dict[str, Any]:
         return self._request("GET", f"/v1/agents/runs/{run_id}")  # type: ignore[return-value]
 
-    def resume_agent_run(self, run_id: str, *, approved: bool | None = None, reason: str | None = None) -> dict[str, Any]:
+    def resume_agent_run(
+        self, run_id: str, *, approved: bool | None = None, reason: str | None = None
+    ) -> dict[str, Any]:
         body: dict[str, Any] = {}
         if approved is not None:
             body["approved"] = approved
@@ -757,7 +760,9 @@ class DataAIClient:
     # 9. Skill
     # ─────────────────────────────────────────────────────────────────
 
-    def list_skills(self, category: str | None = None, q: str | None = None, limit: int = 100, offset: int = 0) -> dict[str, Any]:
+    def list_skills(
+        self, category: str | None = None, q: str | None = None, limit: int = 100, offset: int = 0
+    ) -> dict[str, Any]:
         params: dict[str, Any] = {"limit": limit, "offset": offset}
         if category:
             params["category"] = category
@@ -1009,9 +1014,7 @@ class DataAIClient:
         return self._request("POST", f"/v1/mcp/servers/preset/{preset_id}")  # type: ignore[return-value]
 
     def list_mcp_server_tools(self, server_id: str, refresh: bool = False) -> dict[str, Any]:
-        return self._request(
-            "GET", f"/v1/mcp/servers/{server_id}/tools", params={"refresh": str(refresh).lower()}
-        )  # type: ignore[return-value]
+        return self._request("GET", f"/v1/mcp/servers/{server_id}/tools", params={"refresh": str(refresh).lower()})  # type: ignore[return-value]
 
     def list_all_mcp_tools(self) -> dict[str, Any]:
         return self._request("GET", "/v1/mcp/tools")  # type: ignore[return-value]
@@ -1026,7 +1029,12 @@ class DataAIClient:
         return self._request(
             "POST",
             "/v1/mcp/invoke",
-            json_body={"server_id": server_id, "tool_name": tool_name, "arguments": arguments or {}, "timeout": timeout},
+            json_body={
+                "server_id": server_id,
+                "tool_name": tool_name,
+                "arguments": arguments or {},
+                "timeout": timeout,
+            },
         )  # type: ignore[return-value]
 
     def mcp_health(self) -> dict[str, Any]:
@@ -1099,10 +1107,14 @@ class DataAIClient:
     # ─────────────────────────────────────────────────────────────────
 
     def list_notifications(self, unread_only: bool = False, limit: int = 50) -> dict[str, Any]:
-        return self._request("GET", "/v1/notifications", params={"unread_only": str(unread_only).lower(), "limit": limit})  # type: ignore[return-value]
+        return self._request(
+            "GET", "/v1/notifications", params={"unread_only": str(unread_only).lower(), "limit": limit}
+        )  # type: ignore[return-value]
 
     def mark_notifications_read(
-        self, ids: list[str] | None = None, all_read: bool = False,
+        self,
+        ids: list[str] | None = None,
+        all_read: bool = False,
     ) -> dict[str, Any]:
         body: dict[str, Any] = {"all_read": all_read}
         if ids:
@@ -1116,7 +1128,9 @@ class DataAIClient:
     def list_sessions(self, limit: int = 50) -> dict[str, Any]:
         return self._request("GET", "/v1/sessions", params={"limit": limit})  # type: ignore[return-value]
 
-    def create_session(self, title: str = "新对话", model: str = "gpt-4", messages: list[dict] | None = None) -> dict[str, Any]:
+    def create_session(
+        self, title: str = "新对话", model: str = "gpt-4", messages: list[dict] | None = None
+    ) -> dict[str, Any]:
         return self._request(
             "POST",
             "/v1/sessions",
@@ -1366,7 +1380,9 @@ class DataAIClient:
         return self._request("GET", f"/v1/tenants/{tenant_id}/members")["members"]
 
     def add_tenant_member(self, tenant_id: str, user_id: str, role: str = "member") -> dict:
-        return self._request("POST", f"/v1/tenants/{tenant_id}/members", json={"user_id": user_id, "role": role})["member"]
+        return self._request("POST", f"/v1/tenants/{tenant_id}/members", json={"user_id": user_id, "role": role})[
+            "member"
+        ]
 
     def remove_tenant_member(self, tenant_id: str, user_id: str) -> None:
         self._request("DELETE", f"/v1/tenants/{tenant_id}/members/{user_id}")
@@ -1379,7 +1395,9 @@ class DataAIClient:
         return self._request("GET", "/v1/rbac/roles", params=params)["roles"]
 
     def create_role(self, name: str, permissions: list[dict] | None = None, **kwargs: Any) -> dict:
-        return self._request("POST", "/v1/rbac/roles", json={"name": name, "permissions": permissions or [], **kwargs})["role"]
+        return self._request("POST", "/v1/rbac/roles", json={"name": name, "permissions": permissions or [], **kwargs})[
+            "role"
+        ]
 
     def get_role(self, role_id: str) -> dict:
         return self._request("GET", f"/v1/rbac/roles/{role_id}")["role"]
@@ -1388,10 +1406,14 @@ class DataAIClient:
         self._request("DELETE", f"/v1/rbac/roles/{role_id}")
 
     def list_rbac_policies(self, tenant_id: str = "") -> list[dict]:
-        return self._request("GET", "/v1/rbac/policies", params={"tenant_id": tenant_id} if tenant_id else None)["policies"]
+        return self._request("GET", "/v1/rbac/policies", params={"tenant_id": tenant_id} if tenant_id else None)[
+            "policies"
+        ]
 
     def create_rbac_policy(self, name: str, conditions: list[dict], effect: str = "allow", **kwargs: Any) -> dict:
-        return self._request("POST", "/v1/rbac/policies", json={"name": name, "conditions": conditions, "effect": effect, **kwargs})["policy"]
+        return self._request(
+            "POST", "/v1/rbac/policies", json={"name": name, "conditions": conditions, "effect": effect, **kwargs}
+        )["policy"]
 
     def delete_rbac_policy(self, policy_id: str) -> None:
         self._request("DELETE", f"/v1/rbac/policies/{policy_id}")
@@ -1404,26 +1426,55 @@ class DataAIClient:
             params["tenant_id"] = tenant_id
         return self._request("GET", "/v1/rbac/assignments", params=params)["assignments"]
 
-    def assign_role(self, user_id: str, role_id: str, tenant_id: str = "", granted_by: str = "", expires_at: float = 0.0) -> dict:
-        return self._request("POST", "/v1/rbac/assignments", json={
-            "user_id": user_id, "role_id": role_id, "tenant_id": tenant_id,
-            "granted_by": granted_by, "expires_at": expires_at,
-        })["assignment"]
+    def assign_role(
+        self, user_id: str, role_id: str, tenant_id: str = "", granted_by: str = "", expires_at: float = 0.0
+    ) -> dict:
+        return self._request(
+            "POST",
+            "/v1/rbac/assignments",
+            json={
+                "user_id": user_id,
+                "role_id": role_id,
+                "tenant_id": tenant_id,
+                "granted_by": granted_by,
+                "expires_at": expires_at,
+            },
+        )["assignment"]
 
     def revoke_role(self, user_id: str, role_id: str, tenant_id: str = "") -> None:
-        self._request("DELETE", "/v1/rbac/assignments", params={"user_id": user_id, "role_id": role_id, "tenant_id": tenant_id})
+        self._request(
+            "DELETE", "/v1/rbac/assignments", params={"user_id": user_id, "role_id": role_id, "tenant_id": tenant_id}
+        )
 
-    def rbac_check(self, user_id: str, resource: str, action: str, tenant_id: str = "", env: dict | None = None) -> dict:
-        return self._request("POST", "/v1/rbac/check", json={
-            "user_id": user_id, "resource": resource, "action": action,
-            "tenant_id": tenant_id, "env": env or {},
-        })["decision"]
+    def rbac_check(
+        self, user_id: str, resource: str, action: str, tenant_id: str = "", env: dict | None = None
+    ) -> dict:
+        return self._request(
+            "POST",
+            "/v1/rbac/check",
+            json={
+                "user_id": user_id,
+                "resource": resource,
+                "action": action,
+                "tenant_id": tenant_id,
+                "env": env or {},
+            },
+        )["decision"]
 
-    def rbac_delegate(self, from_user: str, to_user: str, role_id: str, tenant_id: str = "", expires_in: float = 3600) -> dict:
-        return self._request("POST", "/v1/rbac/delegate", params={
-            "from_user": from_user, "to_user": to_user, "role_id": role_id,
-            "tenant_id": tenant_id, "expires_in": expires_in,
-        })["assignment"]
+    def rbac_delegate(
+        self, from_user: str, to_user: str, role_id: str, tenant_id: str = "", expires_in: float = 3600
+    ) -> dict:
+        return self._request(
+            "POST",
+            "/v1/rbac/delegate",
+            params={
+                "from_user": from_user,
+                "to_user": to_user,
+                "role_id": role_id,
+                "tenant_id": tenant_id,
+                "expires_in": expires_in,
+            },
+        )["assignment"]
 
     def rbac_recent_decisions(self, limit: int = 50) -> list[dict]:
         return self._request("GET", "/v1/rbac/decisions", params={"limit": limit})["decisions"]
@@ -1453,9 +1504,16 @@ class DataAIClient:
         return self._request("GET", "/v1/billing/pricing")["pricing"]
 
     def set_pricing(self, model_id: str, input_per_1k: float, output_per_1k: float, **kwargs: Any) -> dict:
-        return self._request("POST", "/v1/billing/pricing", json={
-            "model_id": model_id, "input_per_1k": input_per_1k, "output_per_1k": output_per_1k, **kwargs,
-        })["pricing"]
+        return self._request(
+            "POST",
+            "/v1/billing/pricing",
+            json={
+                "model_id": model_id,
+                "input_per_1k": input_per_1k,
+                "output_per_1k": output_per_1k,
+                **kwargs,
+            },
+        )["pricing"]
 
     def record_usage(self, **kwargs: Any) -> dict:
         return self._request("POST", "/v1/billing/usage", json=kwargs)["record"]
@@ -1478,18 +1536,29 @@ class DataAIClient:
         self._request("DELETE", f"/v1/billing/budgets/{budget_id}")
 
     def list_cost_centers(self, tenant_id: str = "") -> list[dict]:
-        return self._request("GET", "/v1/billing/cost-centers", params={"tenant_id": tenant_id} if tenant_id else None)["cost_centers"]
+        return self._request("GET", "/v1/billing/cost-centers", params={"tenant_id": tenant_id} if tenant_id else None)[
+            "cost_centers"
+        ]
 
     def add_cost_center(self, **kwargs: Any) -> dict:
         return self._request("POST", "/v1/billing/cost-centers", json=kwargs)["cost_center"]
 
     def budget_check(self, tenant_id: str = "", cost_center_id: str = "") -> dict:
-        return self._request("GET", "/v1/billing/budget-check", params={"tenant_id": tenant_id, "cost_center_id": cost_center_id})
+        return self._request(
+            "GET", "/v1/billing/budget-check", params={"tenant_id": tenant_id, "cost_center_id": cost_center_id}
+        )
 
     def export_invoice(self, tenant_id: str, since: float, until: float, format: str = "json") -> str:
-        return self._request("GET", "/v1/billing/invoice", params={
-            "tenant_id": tenant_id, "since": since, "until": until, "format": format,
-        })["invoice"]
+        return self._request(
+            "GET",
+            "/v1/billing/invoice",
+            params={
+                "tenant_id": tenant_id,
+                "since": since,
+                "until": until,
+                "format": format,
+            },
+        )["invoice"]
 
     # ---------- SLA ----------
     def sla_status(self) -> dict:
@@ -1522,16 +1591,30 @@ class DataAIClient:
             params["status"] = status
         return self._request("GET", "/v1/sla/incidents", params=params)["incidents"]
 
-    def open_incident(self, title: str, severity: str = "minor", affected_components: list[str] | None = None, message: str = "") -> dict:
-        return self._request("POST", "/v1/sla/incidents", json={
-            "title": title, "severity": severity,
-            "affected_components": affected_components or [], "message": message,
-        })["incident"]
+    def open_incident(
+        self, title: str, severity: str = "minor", affected_components: list[str] | None = None, message: str = ""
+    ) -> dict:
+        return self._request(
+            "POST",
+            "/v1/sla/incidents",
+            json={
+                "title": title,
+                "severity": severity,
+                "affected_components": affected_components or [],
+                "message": message,
+            },
+        )["incident"]
 
     def update_incident(self, incident_id: str, status: str, message: str = "", by: str = "") -> dict:
-        return self._request("PATCH", f"/v1/sla/incidents/{incident_id}", json={
-            "status": status, "message": message, "by": by,
-        })["incident"]
+        return self._request(
+            "PATCH",
+            f"/v1/sla/incidents/{incident_id}",
+            json={
+                "status": status,
+                "message": message,
+                "by": by,
+            },
+        )["incident"]
 
     def sla_monthly_report(self, year: int, month: int) -> dict:
         return self._request("GET", "/v1/sla/report/monthly", params={"year": year, "month": month})["report"]
@@ -1553,9 +1636,16 @@ class DataAIClient:
         return self._request("GET", "/v1/sso/auth-url", params={"idp_id": idp_id, "redirect_uri": redirect_uri})["url"]
 
     def sso_login(self, idp_id: str, code: str, redirect_uri: str, tenant_id: str = "") -> dict:
-        return self._request("POST", "/v1/sso/login", params={"idp_id": idp_id}, json={
-            "code": code, "redirect_uri": redirect_uri, "tenant_id": tenant_id,
-        })
+        return self._request(
+            "POST",
+            "/v1/sso/login",
+            params={"idp_id": idp_id},
+            json={
+                "code": code,
+                "redirect_uri": redirect_uri,
+                "tenant_id": tenant_id,
+            },
+        )
 
     def sso_logout(self, session_id: str) -> bool:
         return self._request("POST", "/v1/sso/logout", params={"session_id": session_id})["revoked"]
@@ -1591,18 +1681,34 @@ class DataAIClient:
     def delete_residency_policy(self, policy_id: str) -> None:
         self._request("DELETE", f"/v1/residency/policies/{policy_id}")
 
-    def residency_route(self, resource_id: str, data_class: str = "user_data", tenant_id: str = "", prefer_region: str = "") -> dict:
-        return self._request("POST", "/v1/residency/route", json={
-            "resource_id": resource_id, "data_class": data_class,
-            "tenant_id": tenant_id, "prefer_region": prefer_region,
-        })["assignment"]
+    def residency_route(
+        self, resource_id: str, data_class: str = "user_data", tenant_id: str = "", prefer_region: str = ""
+    ) -> dict:
+        return self._request(
+            "POST",
+            "/v1/residency/route",
+            json={
+                "resource_id": resource_id,
+                "data_class": data_class,
+                "tenant_id": tenant_id,
+                "prefer_region": prefer_region,
+            },
+        )["assignment"]
 
     def residency_can_transfer(self, resource_id: str, from_region: str, to_region: str) -> dict:
-        return self._request("POST", "/v1/residency/can-transfer", params={
-            "resource_id": resource_id, "from_region": from_region, "to_region": to_region,
-        })
+        return self._request(
+            "POST",
+            "/v1/residency/can-transfer",
+            params={
+                "resource_id": resource_id,
+                "from_region": from_region,
+                "to_region": to_region,
+            },
+        )
 
-    def list_residency_assignments(self, tenant_id: str = "", data_class: str | None = None, limit: int = 100) -> list[dict]:
+    def list_residency_assignments(
+        self, tenant_id: str = "", data_class: str | None = None, limit: int = 100
+    ) -> list[dict]:
         params: dict[str, Any] = {"limit": limit}
         if tenant_id:
             params["tenant_id"] = tenant_id
@@ -1802,15 +1908,11 @@ class DataAIClient:
             json={"backup_id": backup_id, "target_region": target_region, "reason": reason},
         )["restore"]
 
-    def recovery_advance_restore(
-        self, restore_id: str, status: str, progress_pct: float | None = None
-    ) -> dict:
+    def recovery_advance_restore(self, restore_id: str, status: str, progress_pct: float | None = None) -> dict:
         payload: dict[str, Any] = {"status": status}
         if progress_pct is not None:
             payload["progress_pct"] = progress_pct
-        return self._request(
-            "POST", f"/v1/recovery/restore/{restore_id}/advance", json=payload
-        )["restore"]
+        return self._request("POST", f"/v1/recovery/restore/{restore_id}/advance", json=payload)["restore"]
 
     def recovery_run_drill(
         self,
@@ -1853,9 +1955,7 @@ class DataAIClient:
         )["hold"]
 
     def recovery_check_action(self, resource_id: str, action: str = "delete") -> dict:
-        return self._request(
-            "GET", "/v1/recovery/check-action", params={"resource_id": resource_id, "action": action}
-        )
+        return self._request("GET", "/v1/recovery/check-action", params={"resource_id": resource_id, "action": action})
 
     # ─────────────────────────────────────────────────────────────────────
     # SLA 违约赔付 (Compensation)
@@ -1924,9 +2024,7 @@ class DataAIClient:
             params["status"] = status
         return self._request("GET", "/v1/compensation/credits", params=params)["credits"]
 
-    def compensation_raise_dispute(
-        self, credit_id: str, tenant_id: str, raised_by: str, reason: str
-    ) -> dict:
+    def compensation_raise_dispute(self, credit_id: str, tenant_id: str, raised_by: str, reason: str) -> dict:
         return self._request(
             "POST",
             "/v1/compensation/dispute",
@@ -1938,9 +2036,7 @@ class DataAIClient:
             },
         )["dispute"]
 
-    def compensation_resolve_dispute(
-        self, dispute_id: str, resolution: str, uphold_credit: bool = True
-    ) -> dict:
+    def compensation_resolve_dispute(self, dispute_id: str, resolution: str, uphold_credit: bool = True) -> dict:
         return self._request(
             "POST",
             f"/v1/compensation/dispute/{dispute_id}/resolve",

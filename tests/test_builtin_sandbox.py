@@ -178,11 +178,12 @@ class TestLocalSandbox:
         sb = LocalSandbox(config=config)
         await sb.create()
 
-        from data_ai.utils.exceptions import SandboxTimeoutError
-
         # 跨平台长命令: ``ping -n 11 127.0.0.1`` 在 Win 上 ~10s,
         # ``sleep 10`` 在 Unix 上 10s. timeout=1 应当触发.
         import sys as _sys
+
+        from data_ai.utils.exceptions import SandboxTimeoutError
+
         if _sys.platform == "win32":
             cmd = "ping -n 11 127.0.0.1 > NUL"
         else:

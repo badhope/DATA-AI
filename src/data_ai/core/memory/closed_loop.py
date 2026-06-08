@@ -127,7 +127,7 @@ class InteractionRecord:
         """获取交互状态"""
         if self.success:
             if self.user_feedback is not None:
-                if isinstance(self.user_feedback, (int, float)):
+                if isinstance(self.user_feedback, int | float):
                     if self.user_feedback >= 4:
                         return InteractionStatus.SUCCESS
                     elif self.user_feedback >= 2:
@@ -794,7 +794,7 @@ class ExperienceStore:
 
         # 用户反馈加成
         if interaction.user_feedback:
-            if isinstance(interaction.user_feedback, (int, float)):
+            if isinstance(interaction.user_feedback, int | float):
                 base += (interaction.user_feedback - 3) * 0.1
 
         # 效率加成
@@ -1410,7 +1410,7 @@ class RuleBasedEvaluator(BaseEvaluator):
         dimension_scores[EvaluationDimension.ERROR_HANDLING.value] = 1.0 if not interaction.error_info else 0.5
 
         if interaction.user_feedback is not None:
-            if isinstance(interaction.user_feedback, (int, float)):
+            if isinstance(interaction.user_feedback, int | float):
                 dimension_scores[EvaluationDimension.USER_SATISFACTION.value] = interaction.user_feedback / 5.0
 
         # 计算总分
@@ -1485,7 +1485,7 @@ class RuleBasedEvaluator(BaseEvaluator):
         score = 1.0
 
         if interaction.user_feedback is not None:
-            if isinstance(interaction.user_feedback, (int, float)):
+            if isinstance(interaction.user_feedback, int | float):
                 if interaction.user_feedback < 2:
                     issues.append("用户反馈较差")
                     score = 0.3
@@ -1544,7 +1544,7 @@ class RuleBasedEvaluator(BaseEvaluator):
             improvements.append("需要改进错误处理机制")
 
         if interaction.user_feedback is not None:
-            if isinstance(interaction.user_feedback, (int, float)) and interaction.user_feedback < 3:
+            if isinstance(interaction.user_feedback, int | float) and interaction.user_feedback < 3:
                 improvements.append("根据用户反馈调整响应策略")
 
         return improvements

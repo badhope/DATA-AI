@@ -1,8 +1,4 @@
-
-import asyncio
 import json
-import os
-import sys
 
 from playwright.async_api import Page, async_playwright
 
@@ -78,7 +74,9 @@ async def step_fill_api_key_in_settings(page: Page) -> None:
             data = json.loads(stored)
             profiles = data.get("state", {}).get("profiles", [])
             active_id = data.get("state", {}).get("activeProfileId", "")
-            active = next((p for p in profiles if p.get("id") == active_id), None) or (profiles[0] if profiles else None)
+            active = next((p for p in profiles if p.get("id") == active_id), None) or (
+                profiles[0] if profiles else None
+            )
             stored_key = active.get("apiKey", "") if active else ""
             _check("localStorage 持久化 API key", BORROWED_API_KEY in stored_key, f"len={len(stored_key)}")
         except Exception as e:
@@ -100,7 +98,13 @@ async def step_test_connection(page: Page) -> None:
             await page.wait_for_timeout(3000)  # 等待请求完成
             # 检查页面是否有连接成功/失败的提示
             content = await page.content()
-            ok = "200" in content or "成功" in content or "OK" in content or "healthy" in content or "latency" in content.lower()
+            ok = (
+                "200" in content
+                or "成功" in content
+                or "OK" in content
+                or "healthy" in content
+                or "latency" in content.lower()
+            )
             _check("测试连接", ok, "页面有响应" if ok else "无明显成功标记")
         except Exception as e:
             _check("测试连接", False, str(e)[:80])
@@ -114,7 +118,10 @@ async def step_chat_send_message(page: Page) -> None:
 
     await page.goto(f"{FRONTEND_URL}/chat", wait_until="networkidle", timeout=30000)
     await page.wait_for_timeout(1500)
-    _check("聊天页加载", await page.locator("textarea, input[placeholder*='输入' i], input[placeholder*='message' i]").count() > 0)
+    _check(
+        "聊天页加载",
+        await page.locator("textarea, input[placeholder*='输入' i], input[placeholder*='message' i]").count() > 0,
+    )
 
     # 找到消息输入框
     msg_input = page.locator("textarea").first
@@ -144,11 +151,13 @@ async def step_chat_send_message(page: Page) -> None:
             try:
                 # 检查 Content-Type
                 ct = resp.headers.get("content-type", "")
-                sse_responses.append({
-                    "url": resp.url,
-                    "status": resp.status,
-                    "content_type": ct,
-                })
+                sse_responses.append(
+                    {
+                        "url": resp.url,
+                        "status": resp.status,
+                        "content_type": ct,
+                    }
+                )
                 # 读取 body
                 body = await resp.body()
                 text = body.decode("utf-8", errors="ignore")
@@ -204,7 +213,9 @@ async def step_chat_send_message(page: Page) -> None:
 
     # 验证页面上有 AI 回复内容
     body_text = await page.locator("body").inner_text()
-    has_response = "你好" in body_text or "我" in body_text or "AI" in body_text or "DATA" in body_text or len(body_text) > 200
+    has_response = (
+        "你好" in body_text or "我" in body_text or "AI" in body_text or "DATA" in body_text or len(body_text) > 200
+    )
     _check("页面有 AI 响应内容", has_response, f"body_len={len(body_text)}")
 
 
@@ -251,6 +262,7 @@ async def main():
 
     # 验证后端
     import urllib.request
+
     try:
         with urllib.request.urlopen(f"{BACKEND_URL}/health", timeout=3) as r:
             health = json.loads(r.read())
@@ -299,24 +311,30 @@ async def main():
     return 0 if passed == total else 1
 
 
-
-
 # ── pytest 集成 (auto) ────────────────────────────────────
 import base64 as _b64
 import sys as _sys
+
 import pytest as _pytest
-_MODULE_BODY = _b64.b64decode('IiIiClAxLTYg56uv5Yiw56uv6ZuG5oiQ5rWL6K+VIOKAlCDmqKHmi5/nnJ/lrp7nlKjmiLfmk43kvZzmtYHnqIsKCua1i+ivleWcuuaZrzoKICAxLiDnlKjmiLfpppbmrKHorr/pl67lupTnlKgKICAyLiDmiZPlvIDorr7nva7pobUg4oaSIOWhq+WFpSBBUEkga2V5IChEQVNIU0NPUEUg5YCf57uZ5rWL6K+V55SoKQogIDMuIOa1i+ivlei/nuaOpQogIDQuIOWIh+aNouWIsCBjaGF0IOKGkiDpgInmqKHlnosg4oaSIOWPkea2iOaBryDihpIg6aqM6K+B5rWB5byP5ZON5bqUCiAgNS4g6LeR5a6M5omA5pyJIDE2IOi3r+eUseeahOWKn+iDvea1i+ivlQoK5rOo5oSPOiDlgJ/nlKjnmoQga2V5IOWPqueUqOS6juacrOWcsOa1i+ivlSzkuI3kvJrkuIrkvKDliLDku7vkvZXlnLDmlrnjgIIKIiIiCkZST05URU5EX1VSTCA9IG9zLmVudmlyb24uZ2V0KCJEQVRBX0FJX0ZST05URU5EIiwgImh0dHA6Ly8xMjcuMC4wLjE6NTE4MCIpCkJBQ0tFTkRfVVJMID0gb3MuZW52aXJvbi5nZXQoIkRBVEFfQUlfQkFTRSIsICJodHRwOi8vMTI3LjAuMC4xOjgwMDAiKQpCT1JST1dFRF9BUElfS0VZID0gb3MuZW52aXJvbi5nZXQoIkRBVEFfQUlfVEVTVF9BUElfS0VZIiwgInNrLVJFUExBQ0VfV0lUSF9ZT1VSX1RFU1RfS0VZIikKcmVzdWx0czogbGlzdFt0dXBsZVtzdHIsIGJvb2wsIHN0cl1dID0gW10KaWYgX19uYW1lX18gPT0gIl9fbWFpbl9fIjoKICAgIHN5cy5leGl0KGFzeW5jaW8ucnVuKG1haW4oKSkpCg==').decode("utf-8")
+
+_MODULE_BODY = _b64.b64decode(
+    "IiIiClAxLTYg56uv5Yiw56uv6ZuG5oiQ5rWL6K+VIOKAlCDmqKHmi5/nnJ/lrp7nlKjmiLfmk43kvZzmtYHnqIsKCua1i+ivleWcuuaZrzoKICAxLiDnlKjmiLfpppbmrKHorr/pl67lupTnlKgKICAyLiDmiZPlvIDorr7nva7pobUg4oaSIOWhq+WFpSBBUEkga2V5IChEQVNIU0NPUEUg5YCf57uZ5rWL6K+V55SoKQogIDMuIOa1i+ivlei/nuaOpQogIDQuIOWIh+aNouWIsCBjaGF0IOKGkiDpgInmqKHlnosg4oaSIOWPkea2iOaBryDihpIg6aqM6K+B5rWB5byP5ZON5bqUCiAgNS4g6LeR5a6M5omA5pyJIDE2IOi3r+eUseeahOWKn+iDvea1i+ivlQoK5rOo5oSPOiDlgJ/nlKjnmoQga2V5IOWPqueUqOS6juacrOWcsOa1i+ivlSzkuI3kvJrkuIrkvKDliLDku7vkvZXlnLDmlrnjgIIKIiIiCkZST05URU5EX1VSTCA9IG9zLmVudmlyb24uZ2V0KCJEQVRBX0FJX0ZST05URU5EIiwgImh0dHA6Ly8xMjcuMC4wLjE6NTE4MCIpCkJBQ0tFTkRfVVJMID0gb3MuZW52aXJvbi5nZXQoIkRBVEFfQUlfQkFTRSIsICJodHRwOi8vMTI3LjAuMC4xOjgwMDAiKQpCT1JST1dFRF9BUElfS0VZID0gb3MuZW52aXJvbi5nZXQoIkRBVEFfQUlfVEVTVF9BUElfS0VZIiwgInNrLVJFUExBQ0VfV0lUSF9ZT1VSX1RFU1RfS0VZIikKcmVzdWx0czogbGlzdFt0dXBsZVtzdHIsIGJvb2wsIHN0cl1dID0gW10KaWYgX19uYW1lX18gPT0gIl9fbWFpbl9fIjoKICAgIHN5cy5leGl0KGFzeW5jaW8ucnVuKG1haW4oKSkpCg=="
+).decode("utf-8")
+
 
 def _run_module_body() -> None:
     """执行原顶层可执行代码, 把 ``sys.exit()`` 转成 ``SystemExit`` 异常."""
     _orig_exit = _sys.exit
+
     def _safe_exit(code=0):
         raise SystemExit(code)
+
     _sys.exit = _safe_exit
     try:
         exec(compile(_MODULE_BODY, __file__, "exec"), globals())
     finally:
         _sys.exit = _orig_exit
+
 
 if __name__ == "__main__":
     _run_module_body()

@@ -43,6 +43,7 @@ def _run_setup_sh_checks() -> None:
     check("setup.sh 可执行", os.access(setup_sh, os.X_OK) if setup_sh.exists() else False)
     if setup_sh.exists():
         import shutil
+
         bash_bin = shutil.which("bash")
         # shutil.which 在 Windows 上偶尔会返回 WSL 的 "bash.exe" 路径, 但实际
         # 启动会因 WSL relay 失败而抛 FileNotFoundError. 这里加 try 兜底.
@@ -52,7 +53,9 @@ def _run_setup_sh_checks() -> None:
             try:
                 r = subprocess.run(
                     [bash_bin, "-n", str(setup_sh)],
-                    capture_output=True, text=True, timeout=20,
+                    capture_output=True,
+                    text=True,
+                    timeout=20,
                 )
                 bash_ok = r.returncode == 0
                 bash_err = r.stderr[:80]
@@ -66,8 +69,7 @@ def _run_setup_sh_checks() -> None:
             has_shebang = content.startswith("#!/")
             balanced = content.count("{") == content.count("}")
             ok = has_shebang and balanced
-            detail = (f"无 bash ({bash_err}), 仅做 shebang+括号配对静态检查"
-                      if not ok else "无 bash, 静态检查通过")
+            detail = f"无 bash ({bash_err}), 仅做 shebang+括号配对静态检查" if not ok else "无 bash, 静态检查通过"
             check("setup.sh bash 语法 (静态降级)", ok, detail)
         content = setup_sh.read_text()
         check("setup.sh 装 libreoffice", "libreoffice" in content)
@@ -88,14 +90,13 @@ def _run_context_store_checks() -> None:
     tmpdir = tempfile.mkdtemp(prefix="ctx_test_")
     store = ContextStore(base_dir=tmpdir)
 
-    ctx1 = store.save("main_character", "陈默,28岁,前刑警",
-                      namespace="novel", tags=["character", "main"])
+    ctx1 = store.save("main_character", "陈默,28岁,前刑警", namespace="novel", tags=["character", "main"])
     check("save 首次", ctx1.version == 1, f"v{ctx1.version}")
 
-    ctx2 = store.save("main_character", "陈默,28岁,前刑警,左眼有疤",
-                      namespace="novel", tags=["character", "main"])
-    check("save 更新触发版本", ctx2.version == 2 and len(ctx2.history) == 1,
-          f"v{ctx2.version}, hist={len(ctx2.history)}")
+    ctx2 = store.save("main_character", "陈默,28岁,前刑警,左眼有疤", namespace="novel", tags=["character", "main"])
+    check(
+        "save 更新触发版本", ctx2.version == 2 and len(ctx2.history) == 1, f"v{ctx2.version}, hist={len(ctx2.history)}"
+    )
 
     loaded = store.load("main_character", namespace="novel")
     check("load 读到最新内容", loaded is not None and "左眼有疤" in loaded.content)
@@ -163,12 +164,15 @@ def _run_preset_checks() -> None:
     for role in expected_roles:
         p = REGISTERED_PRESETS[role]
         check(f"{role}: system_prompt 存在", bool(p.get("system_prompt")))
-        check(f"{role}: system_prompt 长度>200", len(p.get("system_prompt", "")) > 200, f"{len(p.get('system_prompt', ''))} 字")
+        check(
+            f"{role}: system_prompt 长度>200",
+            len(p.get("system_prompt", "")) > 200,
+            f"{len(p.get('system_prompt', ''))} 字",
+        )
         check(f"{role}: tools 列表非空", len(p.get("tools", [])) > 0, f"{len(p.get('tools', []))} 个")
         check(f"{role}: default_namespace 设置", bool(p.get("default_namespace")))
         check(f"{role}: max_iterations 设置", p.get("max_iterations", 0) > 0)
-        check(f"{role}: temperature 在 [0,1]",
-              0.0 <= p.get("temperature", 0) <= 1.0, f"{p.get('temperature')}")
+        check(f"{role}: temperature 在 [0,1]", 0.0 <= p.get("temperature", 0) <= 1.0, f"{p.get('temperature')}")
 
 
 def _run_intent_checks() -> None:
@@ -188,19 +192,22 @@ def _run_intent_checks() -> None:
     check("中英混输: send 邮件→发邮件", "发邮件" in norm("send 邮件"))
     check("啰嗦前缀: 请问一下→请问", "请问" in norm("请问一下"))
     check("啰嗦前缀: 能不能→可以", "可以" in norm("能不能"))
-    check("老板口语: 给我弄→帮我(含串行替换)",
-          norm("给我弄一下").startswith("帮我"),
-          f"'{norm('给我弄一下')}' 应以'帮我'开头")
+    check(
+        "老板口语: 给我弄→帮我(含串行替换)",
+        norm("给我弄一下").startswith("帮我"),
+        f"'{norm('给我弄一下')}' 应以'帮我'开头",
+    )
     check("空字符串不崩", norm("") == "")
     check("不替换时不变", norm("你好") == "你好")
 
     intent = rec.recognize("帮我一下,弄一下这个文件,我的帐单有问题")
     check("recognize 调用没崩", intent is not None)
-    check("recognize raw_query 保留原文",
-          intent.raw_query == "帮我一下,弄一下这个文件,我的帐单有问题")
-    check("recognize normalized 走过口语化",
-          "处理" in intent.normalized_query and "账单" in intent.normalized_query,
-          intent.normalized_query)
+    check("recognize raw_query 保留原文", intent.raw_query == "帮我一下,弄一下这个文件,我的帐单有问题")
+    check(
+        "recognize normalized 走过口语化",
+        "处理" in intent.normalized_query and "账单" in intent.normalized_query,
+        intent.normalized_query,
+    )
 
 
 def _run_all() -> None:

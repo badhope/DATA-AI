@@ -75,7 +75,8 @@ SYSTEM_PROMPT = """你是「{company_name}」的资深财务分析师,擅长把�
 
 TOOLS: list[str] = [
     # 读取
-    "file_read", "file_list",
+    "file_read",
+    "file_list",
     "excel_read",
     "word_read",
     "pdf_read",
@@ -84,9 +85,12 @@ TOOLS: list[str] = [
     "python_execute",  # pandas + matplotlib
     "bash",
     # 输出
-    "write_docx", "write_pdf", "write_pptx", "write_md",
+    "write_docx",
+    "write_pdf",
+    "write_pptx",
+    "write_md",
     # 检索/参考
-    "web_search",       # 查行业基准/同行财报
+    "web_search",  # 查行业基准/同行财报
     "context_store_save",
     "context_store_load",
 ]
@@ -96,9 +100,9 @@ TOOLS: list[str] = [
 DEFAULT_NAMESPACE = "finance"
 DEFAULT_TAGS = ["preset", "finance"]
 DEFAULT_CONTEXT_NAMES = [
-    "company_info",          # 公司基本信息、行业
-    "chart_style_guide",    # 图表配色/字体规范
-    "report_template",      # 报告章节模板
+    "company_info",  # 公司基本信息、行业
+    "chart_style_guide",  # 图表配色/字体规范
+    "report_template",  # 报告章节模板
 ]
 
 # ─── 预设配置 ──────────────────────────────────────────
@@ -112,14 +116,14 @@ PRESET: dict[str, Any] = {
     "default_namespace": DEFAULT_NAMESPACE,
     "default_tags": DEFAULT_TAGS,
     "default_context_names": DEFAULT_CONTEXT_NAMES,
-    "max_iterations": 15,         # 财务任务步骤多
-    "temperature": 0.1,            # 数字要精确,温度最低
+    "max_iterations": 15,  # 财务任务步骤多
+    "temperature": 0.1,  # 数字要精确,温度最低
     "reflection": True,
     "user_facing_traits": [
-        "data_first",            # 先看数据再说结论
-        "exact_numbers",         # 数字精确到分
-        "anomaly_alert",         # 异常必标 ⚠️
-        "multi_format_output",   # 默认 4 格式
+        "data_first",  # 先看数据再说结论
+        "exact_numbers",  # 数字精确到分
+        "anomaly_alert",  # 异常必标 ⚠️
+        "multi_format_output",  # 默认 4 格式
     ],
 }
 
@@ -151,6 +155,7 @@ def build_agent(
         # 自动保存 company_info
         if data_dir:
             import os
+
             files = os.listdir(data_dir) if os.path.isdir(data_dir) else []
             file_list_md = "## 数据文件清单\n\n" + "\n".join(f"- {f}" for f in files)
             context_store.save(
