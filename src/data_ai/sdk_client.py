@@ -1268,7 +1268,7 @@ class DataAIClient:
         return self._request("GET", f"/v1/webhooks/{sub_id}")["subscription"]
 
     def update_webhook(self, sub_id: str, **fields: Any) -> dict[str, Any]:
-        return self._request("PATCH", f"/v1/webhooks/{sub_id}", json=fields)["subscription"]
+        return self._request("PATCH", f"/v1/webhooks/{sub_id}", json_body=fields)["subscription"]
 
     def delete_webhook(self, sub_id: str) -> None:
         self._request("DELETE", f"/v1/webhooks/{sub_id}")
@@ -1324,7 +1324,7 @@ class DataAIClient:
         return self._request("GET", f"/v1/jobs/{job_id}")["job"]
 
     def update_job(self, job_id: str, **fields: Any) -> dict[str, Any]:
-        return self._request("PATCH", f"/v1/jobs/{job_id}", json=fields)["job"]
+        return self._request("PATCH", f"/v1/jobs/{job_id}", json_body=fields)["job"]
 
     def delete_job(self, job_id: str) -> None:
         self._request("DELETE", f"/v1/jobs/{job_id}")
@@ -1359,13 +1359,13 @@ class DataAIClient:
         return self._request("GET", "/v1/tenants", params=params)
 
     def create_tenant(self, name: str, plan: str = "free", **kwargs: Any) -> dict:
-        return self._request("POST", "/v1/tenants", json={"name": name, "plan": plan, **kwargs})["tenant"]
+        return self._request("POST", "/v1/tenants", json_body={"name": name, "plan": plan, **kwargs})["tenant"]
 
     def get_tenant(self, tenant_id: str) -> dict:
         return self._request("GET", f"/v1/tenants/{tenant_id}")
 
     def update_tenant(self, tenant_id: str, **kwargs: Any) -> dict:
-        return self._request("PATCH", f"/v1/tenants/{tenant_id}", json=kwargs)["tenant"]
+        return self._request("PATCH", f"/v1/tenants/{tenant_id}", json_body=kwargs)["tenant"]
 
     def delete_tenant(self, tenant_id: str) -> None:
         self._request("DELETE", f"/v1/tenants/{tenant_id}")
@@ -1380,7 +1380,7 @@ class DataAIClient:
         return self._request("GET", f"/v1/tenants/{tenant_id}/members")["members"]
 
     def add_tenant_member(self, tenant_id: str, user_id: str, role: str = "member") -> dict:
-        return self._request("POST", f"/v1/tenants/{tenant_id}/members", json={"user_id": user_id, "role": role})[
+        return self._request("POST", f"/v1/tenants/{tenant_id}/members", json_body={"user_id": user_id, "role": role})[
             "member"
         ]
 
@@ -1395,9 +1395,9 @@ class DataAIClient:
         return self._request("GET", "/v1/rbac/roles", params=params)["roles"]
 
     def create_role(self, name: str, permissions: list[dict] | None = None, **kwargs: Any) -> dict:
-        return self._request("POST", "/v1/rbac/roles", json={"name": name, "permissions": permissions or [], **kwargs})[
-            "role"
-        ]
+        return self._request(
+            "POST", "/v1/rbac/roles", json_body={"name": name, "permissions": permissions or [], **kwargs}
+        )["role"]
 
     def get_role(self, role_id: str) -> dict:
         return self._request("GET", f"/v1/rbac/roles/{role_id}")["role"]
@@ -1412,7 +1412,7 @@ class DataAIClient:
 
     def create_rbac_policy(self, name: str, conditions: list[dict], effect: str = "allow", **kwargs: Any) -> dict:
         return self._request(
-            "POST", "/v1/rbac/policies", json={"name": name, "conditions": conditions, "effect": effect, **kwargs}
+            "POST", "/v1/rbac/policies", json_body={"name": name, "conditions": conditions, "effect": effect, **kwargs}
         )["policy"]
 
     def delete_rbac_policy(self, policy_id: str) -> None:
@@ -1432,7 +1432,7 @@ class DataAIClient:
         return self._request(
             "POST",
             "/v1/rbac/assignments",
-            json={
+            json_body={
                 "user_id": user_id,
                 "role_id": role_id,
                 "tenant_id": tenant_id,
@@ -1452,7 +1452,7 @@ class DataAIClient:
         return self._request(
             "POST",
             "/v1/rbac/check",
-            json={
+            json_body={
                 "user_id": user_id,
                 "resource": resource,
                 "action": action,
@@ -1507,7 +1507,7 @@ class DataAIClient:
         return self._request(
             "POST",
             "/v1/billing/pricing",
-            json={
+            json_body={
                 "model_id": model_id,
                 "input_per_1k": input_per_1k,
                 "output_per_1k": output_per_1k,
@@ -1516,7 +1516,7 @@ class DataAIClient:
         )["pricing"]
 
     def record_usage(self, **kwargs: Any) -> dict:
-        return self._request("POST", "/v1/billing/usage", json=kwargs)["record"]
+        return self._request("POST", "/v1/billing/usage", json_body=kwargs)["record"]
 
     def list_usage(self, **kwargs: Any) -> list[dict]:
         return self._request("GET", "/v1/billing/usage", params=kwargs)["records"]
@@ -1530,7 +1530,7 @@ class DataAIClient:
         return self._request("GET", "/v1/billing/budgets", params=params)["budgets"]
 
     def set_budget(self, **kwargs: Any) -> dict:
-        return self._request("POST", "/v1/billing/budgets", json=kwargs)["budget"]
+        return self._request("POST", "/v1/billing/budgets", json_body=kwargs)["budget"]
 
     def delete_budget(self, budget_id: str) -> None:
         self._request("DELETE", f"/v1/billing/budgets/{budget_id}")
@@ -1541,7 +1541,7 @@ class DataAIClient:
         ]
 
     def add_cost_center(self, **kwargs: Any) -> dict:
-        return self._request("POST", "/v1/billing/cost-centers", json=kwargs)["cost_center"]
+        return self._request("POST", "/v1/billing/cost-centers", json_body=kwargs)["cost_center"]
 
     def budget_check(self, tenant_id: str = "", cost_center_id: str = "") -> dict:
         return self._request(
@@ -1568,7 +1568,7 @@ class DataAIClient:
         return self._request("GET", "/v1/sla/slos")["slos"]
 
     def create_slo(self, **kwargs: Any) -> dict:
-        return self._request("POST", "/v1/sla/slos", json=kwargs)["slo"]
+        return self._request("POST", "/v1/sla/slos", json_body=kwargs)["slo"]
 
     def evaluate_slo(self, slo_id: str, window_sec: float = 86400) -> dict:
         return self._request("GET", f"/v1/sla/slos/{slo_id}/evaluate", params={"window_sec": window_sec})["report"]
@@ -1580,10 +1580,12 @@ class DataAIClient:
         return self._request("GET", "/v1/sla/components")["components"]
 
     def register_sla_component(self, name: str, description: str = "") -> dict:
-        return self._request("POST", "/v1/sla/components", json={"name": name, "description": description})["component"]
+        return self._request("POST", "/v1/sla/components", json_body={"name": name, "description": description})[
+            "component"
+        ]
 
     def sla_record_probe(self, **kwargs: Any) -> dict:
-        return self._request("POST", "/v1/sla/probe", json=kwargs)["probe"]
+        return self._request("POST", "/v1/sla/probe", json_body=kwargs)["probe"]
 
     def list_incidents(self, status: str | None = None, limit: int = 50) -> list[dict]:
         params: dict[str, Any] = {"limit": limit}
@@ -1597,7 +1599,7 @@ class DataAIClient:
         return self._request(
             "POST",
             "/v1/sla/incidents",
-            json={
+            json_body={
                 "title": title,
                 "severity": severity,
                 "affected_components": affected_components or [],
@@ -1609,7 +1611,7 @@ class DataAIClient:
         return self._request(
             "PATCH",
             f"/v1/sla/incidents/{incident_id}",
-            json={
+            json_body={
                 "status": status,
                 "message": message,
                 "by": by,
@@ -1624,7 +1626,7 @@ class DataAIClient:
         return self._request("GET", "/v1/sso/idps")["idps"]
 
     def register_idp(self, **kwargs: Any) -> dict:
-        return self._request("POST", "/v1/sso/idps", json=kwargs)["idp"]
+        return self._request("POST", "/v1/sso/idps", json_body=kwargs)["idp"]
 
     def get_idp(self, idp_id: str) -> dict:
         return self._request("GET", f"/v1/sso/idps/{idp_id}")["idp"]
@@ -1640,7 +1642,7 @@ class DataAIClient:
             "POST",
             "/v1/sso/login",
             params={"idp_id": idp_id},
-            json={
+            json_body={
                 "code": code,
                 "redirect_uri": redirect_uri,
                 "tenant_id": tenant_id,
@@ -1657,7 +1659,7 @@ class DataAIClient:
         return self._request("GET", "/v1/sso/scim/users", params={"active_only": active_only})["users"]
 
     def upsert_scim_user(self, user_name: str, **kwargs: Any) -> dict:
-        return self._request("POST", "/v1/sso/scim/users", json={"user_name": user_name, **kwargs})["user"]
+        return self._request("POST", "/v1/sso/scim/users", json_body={"user_name": user_name, **kwargs})["user"]
 
     def deactivate_scim_user(self, user_name: str) -> None:
         self._request("DELETE", f"/v1/sso/scim/users/{user_name}")
@@ -1667,7 +1669,7 @@ class DataAIClient:
         return self._request("GET", "/v1/residency/regions")["regions"]
 
     def add_region(self, **kwargs: Any) -> dict:
-        return self._request("POST", "/v1/residency/regions", json=kwargs)["region"]
+        return self._request("POST", "/v1/residency/regions", json_body=kwargs)["region"]
 
     def set_region_status(self, region_id: str, status: str) -> dict:
         return self._request("POST", f"/v1/residency/regions/{region_id}/status", params={"status": status})["region"]
@@ -1676,7 +1678,7 @@ class DataAIClient:
         return self._request("GET", "/v1/residency/policies")["policies"]
 
     def add_residency_policy(self, **kwargs: Any) -> dict:
-        return self._request("POST", "/v1/residency/policies", json=kwargs)["policy"]
+        return self._request("POST", "/v1/residency/policies", json_body=kwargs)["policy"]
 
     def delete_residency_policy(self, policy_id: str) -> None:
         self._request("DELETE", f"/v1/residency/policies/{policy_id}")
@@ -1687,7 +1689,7 @@ class DataAIClient:
         return self._request(
             "POST",
             "/v1/residency/route",
-            json={
+            json_body={
                 "resource_id": resource_id,
                 "data_class": data_class,
                 "tenant_id": tenant_id,
@@ -1727,7 +1729,7 @@ class DataAIClient:
         return self._request("GET", "/v1/audit-chain/blocks")["blocks"]
 
     def audit_chain_add(self, entry: dict) -> dict:
-        return self._request("POST", "/v1/audit-chain/add", json={"entry": entry})
+        return self._request("POST", "/v1/audit-chain/add", json_body={"entry": entry})
 
     def audit_chain_seal(self) -> dict:
         return self._request("POST", "/v1/audit-chain/seal")["block"]
@@ -1767,7 +1769,7 @@ class DataAIClient:
         return self._request(
             "POST",
             "/v1/replication/policies",
-            json={
+            json_body={
                 "name": name,
                 "source_region": source_region,
                 "target_region": target_region,
@@ -1779,7 +1781,7 @@ class DataAIClient:
         )["policy"]
 
     def replication_delete_policy(self, policy_id: str) -> bool:
-        return self._request("DELETE", f"/v1/replication/policies/{policy_id}", _expect_json=False) is None
+        return self._request("DELETE", f"/v1/replication/policies/{policy_id}") is None
 
     def replication_list_streams(self, policy_id: str = "", state: str = "") -> list[dict]:
         params: dict[str, Any] = {}
@@ -1793,14 +1795,14 @@ class DataAIClient:
         return self._request(
             "POST",
             f"/v1/replication/streams/{stream_id}/sync",
-            json={"records": records, "bytes_sent": bytes_sent, "lag_sec": lag_sec},
+            json_body={"records": records, "bytes_sent": bytes_sent, "lag_sec": lag_sec},
         )["stream"]
 
     def replication_record_failure(self, stream_id: str, error: str, records_lost: int = 0) -> dict:
         return self._request(
             "POST",
             f"/v1/replication/streams/{stream_id}/failure",
-            json={"error": error, "records_lost": records_lost},
+            json_body={"error": error, "records_lost": records_lost},
         )["stream"]
 
     def replication_pause_stream(self, stream_id: str) -> dict:
@@ -1815,7 +1817,7 @@ class DataAIClient:
         return self._request(
             "POST",
             "/v1/replication/failovers",
-            json={
+            json_body={
                 "from_region": from_region,
                 "to_region": to_region,
                 "mode": mode,
@@ -1827,21 +1829,21 @@ class DataAIClient:
         return self._request(
             "POST",
             f"/v1/replication/failovers/{failover_id}/advance",
-            json={"new_state": new_state, "notes": notes},
+            json_body={"new_state": new_state, "notes": notes},
         )["failover"]
 
     def replication_complete_failover(self, failover_id: str, success: bool, data_loss_records: int = 0) -> dict:
         return self._request(
             "POST",
             f"/v1/replication/failovers/{failover_id}/complete",
-            json={"success": success, "data_loss_records": data_loss_records},
+            json_body={"success": success, "data_loss_records": data_loss_records},
         )["failover"]
 
     def replication_quorum_check(self, region: str, total_replicas: int, reachable_replicas: int) -> dict:
         return self._request(
             "POST",
             "/v1/replication/quorum-check",
-            json={
+            json_body={
                 "region": region,
                 "total_replicas": total_replicas,
                 "reachable_replicas": reachable_replicas,
@@ -1873,7 +1875,7 @@ class DataAIClient:
         return self._request(
             "POST",
             "/v1/recovery/schedules",
-            json={
+            json_body={
                 "name": name,
                 "backup_type": backup_type,
                 "cron_expr": cron_expr,
@@ -1887,7 +1889,7 @@ class DataAIClient:
         return self._request(
             "POST",
             f"/v1/recovery/schedules/{schedule_id}/trigger",
-            json={"schedule_id": schedule_id, "record_count": record_count},
+            json_body={"schedule_id": schedule_id, "record_count": record_count},
         )["backup"]
 
     def recovery_list_backups(self, schedule_id: str = "", status: str = "") -> list[dict]:
@@ -1905,14 +1907,14 @@ class DataAIClient:
         return self._request(
             "POST",
             "/v1/recovery/restore",
-            json={"backup_id": backup_id, "target_region": target_region, "reason": reason},
+            json_body={"backup_id": backup_id, "target_region": target_region, "reason": reason},
         )["restore"]
 
     def recovery_advance_restore(self, restore_id: str, status: str, progress_pct: float | None = None) -> dict:
         payload: dict[str, Any] = {"status": status}
         if progress_pct is not None:
             payload["progress_pct"] = progress_pct
-        return self._request("POST", f"/v1/recovery/restore/{restore_id}/advance", json=payload)["restore"]
+        return self._request("POST", f"/v1/recovery/restore/{restore_id}/advance", json_body=payload)["restore"]
 
     def recovery_run_drill(
         self,
@@ -1925,7 +1927,7 @@ class DataAIClient:
         return self._request(
             "POST",
             "/v1/recovery/drill",
-            json={
+            json_body={
                 "name": name,
                 "schedule_id": schedule_id,
                 "rto_target_sec": rto_target_sec,
@@ -1946,7 +1948,7 @@ class DataAIClient:
         return self._request(
             "POST",
             "/v1/recovery/holds",
-            json={
+            json_body={
                 "resource_id": resource_id,
                 "regulation": regulation,
                 "action": action,
@@ -1976,7 +1978,7 @@ class DataAIClient:
         return self._request(
             "POST",
             "/v1/compensation/policies",
-            json={
+            json_body={
                 "name": name,
                 "plan_tier": plan_tier,
                 "target_availability_pct": target_availability_pct,
@@ -1989,7 +1991,7 @@ class DataAIClient:
         return self._request(
             "POST",
             "/v1/compensation/breach",
-            json={
+            json_body={
                 "policy_id": policy_id,
                 "tenant_id": tenant_id,
                 "actual_availability_pct": actual_availability_pct,
@@ -2007,7 +2009,7 @@ class DataAIClient:
         return self._request(
             "POST",
             "/v1/compensation/calculate",
-            json={"breach_id": breach_id, "monthly_fee_usd": monthly_fee_usd},
+            json_body={"breach_id": breach_id, "monthly_fee_usd": monthly_fee_usd},
         )["credit"]
 
     def compensation_apply_credit(self, credit_id: str) -> dict:
@@ -2028,7 +2030,7 @@ class DataAIClient:
         return self._request(
             "POST",
             "/v1/compensation/dispute",
-            json={
+            json_body={
                 "credit_id": credit_id,
                 "tenant_id": tenant_id,
                 "raised_by": raised_by,
@@ -2040,7 +2042,7 @@ class DataAIClient:
         return self._request(
             "POST",
             f"/v1/compensation/dispute/{dispute_id}/resolve",
-            json={"resolution": resolution, "uphold_credit": uphold_credit},
+            json_body={"resolution": resolution, "uphold_credit": uphold_credit},
         )["dispute"]
 
     def compensation_tenant_summary(self, tenant_id: str, period_start: float, period_end: float) -> dict:
