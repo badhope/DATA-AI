@@ -1,0 +1,423 @@
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+
+/* ============================================================
+   DATA-AI Design System — "工程笔记 / 技术刊" 风格
+   摆脱通用 AI SaaS 紫色玻璃风,采用:
+   - 暖纸/油墨主色  (深色模式墨黑 / 浅色模式米白)
+   - 单色信号橙点缀 (vermilion #d65d2a)
+   - 编辑排版: 衬线 display + Mono 数据
+   - 清晰 1px rules, 不用 blur / glass
+   ============================================================ */
+
+@theme {
+  /* === Ink & Paper palette === */
+  --color-background: #0e0e0c;        /* 深墨 */
+  --color-foreground: #ece8de;        /* 米黄/纸 */
+  --color-card: #161614;              /* 卡片 = 背景 + 微提亮 */
+  --color-card-foreground: #ece8de;
+  --color-popover: #1a1a18;
+  --color-popover-foreground: #ece8de;
+
+  /* === Signal accents === */
+  --color-primary: #d65d2a;           /* 朱红 (vermilion) — 主品牌色 */
+  --color-primary-foreground: #0e0e0c;
+  --color-secondary: #1f1f1c;         /* 浓墨灰 */
+  --color-secondary-foreground: #ece8de;
+  --color-muted: #1f1f1c;
+  --color-muted-foreground: #8a8579;  /* 弱化灰 */
+  --color-accent: #2a2a26;            /* hover 态 */
+  --color-accent-foreground: #ece8de;
+
+  /* === Semantic === */
+  --color-destructive: #c0392b;       /* 暗红 */
+  --color-destructive-foreground: #ece8de;
+  --color-success: #5a8a3a;           /* 草绿 */
+  --color-warning: #c89b3c;           /* 芥末黄 */
+  --color-info: #4a7a8c;              /* 钢青 */
+
+  /* === Lines === */
+  --color-border: #2a2a26;            /* 1px rules */
+  --color-input: #2a2a26;
+  --color-ring: #d65d2a;              /* focus ring = primary */
+
+  /* === Geometry — 锐利 === */
+  --radius-lg: 2px;                   /* 几乎无圆角 */
+  --radius-md: 2px;
+  --radius-sm: 1px;
+
+  /* === Type — 编辑风 === */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "PingFang SC", "Noto Sans SC", sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "Menlo", "SF Mono", monospace;
+  --font-display: "Fraunces", "Source Serif Pro", "Georgia", "Songti SC", serif;
+  --font-eyebrow: "JetBrains Mono", "SF Mono", monospace;   /* 等宽小标签 */
+
+  /* === Custom shadows — flat 偏印刷感 === */
+  --shadow-flat: 0 1px 0 0 var(--color-border);
+  --shadow-rule: inset 0 -1px 0 0 var(--color-border);
+}
+
+/* === Light mode: 暖纸 + 深墨 === */
+@layer base {
+  :root.light {
+    --color-background: #f4ede0;      /* 米黄纸 */
+    --color-foreground: #1a1814;      /* 深墨 */
+    --color-card: #ece4d4;            /* 比背景略深 */
+    --color-card-foreground: #1a1814;
+    --color-popover: #f9f3e6;
+    --color-popover-foreground: #1a1814;
+    --color-secondary: #ddd1bc;
+    --color-secondary-foreground: #1a1814;
+    --color-muted: #ddd1bc;
+    --color-muted-foreground: #6b6354;
+    --color-accent: #c9b894;
+    --color-accent-foreground: #1a1814;
+    --color-border: #1a1814;          /* 浅色模式 borders 是深墨 */
+    --color-input: #1a1814;
+  }
+
+  * {
+    border-color: var(--color-border);
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    color-scheme: dark;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  html.light {
+    color-scheme: light;
+  }
+
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
+    /* 微纸纹 — 极淡 SVG noise */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 0;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-muted-foreground);
+  }
+
+  *:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 1px;
+  }
+
+  /* 选区 — 印刷感红 */
+  ::selection {
+    background: var(--color-primary);
+    color: var(--color-primary-foreground);
+  }
+}
+
+/* ============================================================
+   Components — 全部重新设计
+   ============================================================ */
+@layer components {
+
+  /* === 编辑式 Eyebrow === */
+  .eyebrow {
+    font-family: var(--font-eyebrow);
+    font-size: 0.6875rem;       /* 11px */
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-muted-foreground);
+  }
+
+  .eyebrow-accent {
+    color: var(--color-primary);
+  }
+
+  /* === Display (大标题) — 衬线 === */
+  .display {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .display-italic {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  /* === Editorial card — 顶部有 1px rule + 角落编号 === */
+  .editorial-card {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 2px;
+    position: relative;
+  }
+  .editorial-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--color-primary);
+    opacity: 0.6;
+  }
+
+  /* === 章节号 / 报头风 === */
+  .section-marker {
+    font-family: var(--font-eyebrow);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--color-muted-foreground);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .section-marker::before {
+    content: "§";
+    color: var(--color-primary);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  /* === 1px rule === */
+  .rule {
+    border: 0;
+    border-top: 1px solid var(--color-border);
+    margin: 0;
+  }
+  .rule-thick {
+    border-top: 2px solid var(--color-foreground);
+  }
+  .rule-double {
+    border: 0;
+    border-top: 1px solid var(--color-foreground);
+    border-bottom: 1px solid var(--color-foreground);
+    height: 4px;
+  }
+
+  /* === Inline label (data / 标签) === */
+  .label {
+    font-family: var(--font-eyebrow);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted-foreground);
+  }
+
+  /* === 渐隐文本 (印刷风脚注) === */
+  .footnote {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--color-muted-foreground);
+    line-height: 1.4;
+  }
+
+  /* === Highlight (橙底) === */
+  .hi {
+    background: var(--color-primary);
+    color: var(--color-primary-foreground);
+    padding: 0 0.2em;
+    box-decoration-break: clone;
+  }
+
+  .hi-underline {
+    background-image: linear-gradient(var(--color-primary), var(--color-primary));
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 100% 0.18em;
+    padding-bottom: 0.04em;
+  }
+
+  /* === Pulse dot (状态指示) === */
+  .status-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: currentColor;
+    border-radius: 9999px;
+  }
+  .status-dot-live {
+    position: relative;
+  }
+  .status-dot-live::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: 9999px;
+    border: 1px solid currentColor;
+    opacity: 0.4;
+    animation: status-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+  @keyframes status-ping {
+    0% { transform: scale(0.8); opacity: 0.6; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+
+  /* === 印刷感的数字 === */
+  .num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  /* === Drop cap === */
+  .drop-cap::first-letter {
+    font-family: var(--font-display);
+    float: left;
+    font-size: 4.2rem;
+    line-height: 0.85;
+    font-weight: 700;
+    padding-right: 0.5rem;
+    padding-top: 0.3rem;
+    color: var(--color-primary);
+  }
+
+  /* === 替换原 glass === */
+  .glass {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+  }
+
+  /* === Editorial text 斜体衬线 (取代原渐变文字) === */
+  .editorial-text {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+
+  /* === Editorial rule 顶部 2px 印刷色条 (取代原渐变描边) === */
+  .editorial-rule {
+    position: relative;
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 2px;
+  }
+  .editorial-rule::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--color-primary);
+  }
+
+  /* === 网格背景 === */
+  .grid-bg {
+    background-image: linear-gradient(
+        to right,
+        color-mix(in oklab, var(--color-border) 60%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        color-mix(in oklab, var(--color-border) 60%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 32px 32px;
+  }
+
+  /* === 点状背景 (印刷网点感) === */
+  .dot-bg {
+    background-image: radial-gradient(
+      var(--color-border) 1px,
+      transparent 1px
+    );
+    background-size: 16px 16px;
+  }
+
+  .noise-bg {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+
+  /* === Shimmer — 印刷感的"过墨" === */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in oklab, var(--color-muted-foreground) 12%, transparent) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  /* === Tab 选项 (新) === */
+  .tab-underline {
+    position: relative;
+    padding: 0.5rem 0;
+  }
+  .tab-underline::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: var(--color-primary);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 200ms ease;
+  }
+  .tab-underline[data-active="true"]::after,
+  .tab-underline:hover::after {
+    transform: scaleX(1);
+  }
+}
+
+/* ============================================================
+   Utilities
+   ============================================================ */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}

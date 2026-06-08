@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  data-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: data-ai-cli
+    stdin_open: true
+    tty: true
+    volumes:
+      - data-ai-config:/root/.data-ai
+      - ./workspace:/workspace
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+volumes:
+  data-ai-config:
+    driver: local

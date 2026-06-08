@@ -1,0 +1,72 @@
+# gitleaks custom config for badhope repos
+# Extends the default rules with allowlists for known test/docs/placeholder patterns
+# so the workflow doesn't generate noise that masks real findings.
+
+title = "badhope gitleaks config"
+
+[allowlist]
+description = "Global allowlist for known false-positive categories"
+
+# Test files, fixtures, and snapshots
+paths = [
+  '''(^|/)tests?/.*''',
+  '''(^|/)__tests__/.*''',
+  '''(^|/)spec/.*\.md$''',
+  '''(^|/)testdata/.*''',
+  '''(^|/)fixtures?/.*''',
+  '''(^|/)mocks?/.*''',
+  '''.*_test\.go$''',
+  '''.*\.test\.(ts|js|tsx|jsx|py)$''',
+  '''.*_test\.(py|ts|js)$''',
+  '''.*test_[^/]*\.py$''',
+  '''.*_fixture\.(json|ya?ml|toml)$''',
+  '''.*\.spec\.(ts|js|tsx|jsx)$''',
+]
+
+# Documentation and example files (curl examples, README snippets)
+paths2 = [
+  '''(^|/)docs?/.*\.(md|mdx|rst|txt)$''',
+  '''(^|/)README\.(md|rst|txt)$''',
+  '''(^|/)CHANGELOG\.(md|rst|txt)$''',
+  '''(^|/)CONTRIBUTING\.(md|rst|txt)$''',
+  '''(^|/)SECURITY\.(md|rst|txt)$''',
+  '''(^|/)\.github/.*\.(md|mdx)$''',
+  '''.*\.example$''',
+  '''.*\.sample$''',
+  '''.*\.template$''',
+]
+
+# Environment variable templates (these are USUALLY placeholders)
+regexes = [
+  '''(?i)(REPLACE[_-]?ME|REPLACE[_-]?WITH|YOUR[_-]?(API[_-]?KEY|TOKEN|SECRET|PASSWORD))''',
+  '''(?i)(placeholder|example\.com|example\.org|your-(token|key|secret|password))''',
+  '''(?i)(sk-(your|test|no-key-required|bay|placeholder))''',
+  '''(?i)(xoxb-your|xoxb-placeholder|xoxb-example)''',
+  '''(?i)(AKIAIOSFODNN7EXAMPLE)''',
+  '''(?i)(AIzaSyX{10,})''',
+  '''(?i)(changeme|change-me|change_me)''',
+  '''(?i)://(user|admin|root|postgres|mongo|db):(user|pass|admin|root|password|placeholder|changeme|change-me)[@/]''',
+  '''(?i)(hunter2|test123|password123|abc123)''',
+]
+
+# Common stopwords in allowlist match
+stopwords = [
+  "REDACTED",
+  "<YOUR_",
+  "REPLACE_ME",
+  "PLACEHOLDER",
+  "CHANGEME",
+  "EXAMPLE",
+  "SAMPLE",
+  "DUMMY",
+  "FAKE",
+  "MOCK",
+  "TEST",
+  "TODO",
+  "FIXME",
+  "your-",
+  "your_",
+  "xxxxxx",
+  "000000",
+  "111111",
+]

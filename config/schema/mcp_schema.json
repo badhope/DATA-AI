@@ -1,0 +1,218 @@
+{
+  "name": "MCP (Model Context Protocol) Service Specification",
+  "version": "1.0.0",
+  "description": "MCP tool service system architecture definition",
+  "protocol_version": "2024-11-05",
+  "schemas": {
+    "MCPServerConfig": {
+      "type": "object",
+      "description": "MCP server configuration",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Server unique identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Server name"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["stdio", "sse", "http"],
+          "description": "Connection type"
+        },
+        "command": {
+          "type": "string",
+          "description": "Start command (stdio type)"
+        },
+        "args": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Start arguments"
+        },
+        "url": {
+          "type": "string",
+          "description": "Server URL (sse/http type)"
+        },
+        "env": {
+          "type": "object",
+          "description": "Environment variables"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "inactive", "error"],
+          "default": "inactive"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "required": ["id", "name", "type"]
+    },
+    "MCPTool": {
+      "type": "object",
+      "description": "MCP tool definition",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Tool name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Tool description"
+        },
+        "inputSchema": {
+          "type": "object",
+          "description": "Input parameter JSON Schema"
+        },
+        "server_id": {
+          "type": "string",
+          "description": "Associated server ID"
+        }
+      },
+      "required": ["name", "description", "inputSchema"]
+    },
+    "MCPResource": {
+      "type": "object",
+      "description": "MCP resource definition",
+      "properties": {
+        "uri": {
+          "type": "string",
+          "description": "Resource URI"
+        },
+        "name": {
+          "type": "string",
+          "description": "Resource name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Resource description"
+        },
+        "mimeType": {
+          "type": "string",
+          "description": "MIME type"
+        }
+      }
+    },
+    "MCPServerManifest": {
+      "type": "object",
+      "description": "MCP server manifest file",
+      "properties": {
+        "mcpServers": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/schemas/MCPServerConfig"
+          }
+        }
+      }
+    }
+  },
+  "builtin_servers": {
+    "filesystem": {
+      "name": "Local Filesystem",
+      "description": "Read and operate local files",
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/"],
+      "icon": "📁"
+    },
+    "github": {
+      "name": "GitHub",
+      "description": "Access GitHub repositories and API",
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "icon": "🐙"
+    },
+    "postgres": {
+      "name": "PostgreSQL",
+      "description": "Access PostgreSQL database",
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "icon": "🐘"
+    },
+    "slack": {
+      "name": "Slack",
+      "description": "Access Slack workspace",
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-slack"],
+      "icon": "💬"
+    },
+    "brave_search": {
+      "name": "Brave Search",
+      "description": "Search the web via Brave Search API",
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "icon": "🔍"
+    },
+    "web_playwright": {
+      "name": "Web Playwright",
+      "description": "Browser automation operations",
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-web-playwright"],
+      "icon": "🌐"
+    },
+    "gmail": {
+      "name": "Gmail",
+      "description": "Access Gmail messages",
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-gmail"],
+      "icon": "📧"
+    },
+    "google_drive": {
+      "name": "Google Drive",
+      "description": "Access Google Drive files",
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-google-drive"],
+      "icon": "📁"
+    },
+    "notion": {
+      "name": "Notion",
+      "description": "Access Notion workspace",
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-notion"],
+      "icon": "📝"
+    },
+    "sequential_thinking": {
+      "name": "Sequential Thinking",
+      "description": "Sequential thinking tool",
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "icon": "🧠"
+    }
+  },
+  "example_config": {
+    "mcpServers": {
+      "my_files": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/my/files"]
+      },
+      "github": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-github"],
+        "env": {
+          "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_TOKEN_HERE"
+        }
+      },
+      "brave_search": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+        "env": {
+          "BRAVE_API_KEY": "xxxxx"
+        }
+      }
+    }
+  }
+}

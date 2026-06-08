@@ -1,0 +1,265 @@
+{
+  "name": "Skill System Specification",
+  "version": "1.0.0",
+  "description": "Standard skill system architecture definition",
+  "schemas": {
+    "Skill": {
+      "type": "object",
+      "description": "Skill main object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Skill unique identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Skill name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Skill detailed description"
+        },
+        "version": {
+          "type": "string",
+          "description": "Version number",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "author": {
+          "type": "string",
+          "description": "Author"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["data_analysis", "code_generation", "document_processing", "web_scraping", "api_integration", "automation", "custom"],
+          "description": "Skill category"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["built_in", "custom", "workflow", "mcp"],
+          "description": "Skill type"
+        },
+        "icon": {
+          "type": "string",
+          "description": "Icon (emoji or URL)"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "published", "deprecated"],
+          "default": "published"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "name", "description", "version", "type"]
+    },
+    "SkillParameter": {
+      "type": "object",
+      "description": "Skill parameter definition",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Parameter name"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["string", "number", "integer", "boolean", "object", "array", "file"],
+          "description": "Parameter type"
+        },
+        "description": {
+          "type": "string",
+          "description": "Parameter description"
+        },
+        "required": {
+          "type": "boolean",
+          "default": false
+        },
+        "default": {
+          "description": "Default value"
+        },
+        "enum": {
+          "type": "array",
+          "description": "Enum values list"
+        },
+        "min": {
+          "type": "number",
+          "description": "Minimum value (numeric types)"
+        },
+        "max": {
+          "type": "number",
+          "description": "Maximum value (numeric types)"
+        },
+        "pattern": {
+          "type": "string",
+          "description": "Regex pattern (string types)"
+        }
+      },
+      "required": ["name", "type", "description"]
+    },
+    "SkillPrompt": {
+      "type": "object",
+      "description": "Skill prompt definition",
+      "properties": {
+        "system_prompt": {
+          "type": "string",
+          "description": "System prompt"
+        },
+        "user_prompt_template": {
+          "type": "string",
+          "description": "User prompt template (supports variable placeholders)"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "input": { "type": "string" },
+              "output": { "type": "string" }
+            }
+          },
+          "description": "Examples"
+        }
+      }
+    },
+    "SkillTool": {
+      "type": "object",
+      "description": "Skill associated tool",
+      "properties": {
+        "tool_name": { "type": "string" },
+        "tool_config": { "type": "object" }
+      }
+    },
+    "CustomSkillManifest": {
+      "type": "object",
+      "description": "Custom skill manifest",
+      "properties": {
+        "manifest_version": {
+          "type": "string",
+          "enum": ["1.0"],
+          "description": "Manifest version"
+        },
+        "skill": {
+          "$ref": "#/schemas/Skill"
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/schemas/SkillParameter"
+          }
+        },
+        "prompts": {
+          "$ref": "#/schemas/SkillPrompt"
+        },
+        "tools": {
+          "type": "array",
+          "items": {
+            "$ref": "#/schemas/SkillTool"
+          }
+        },
+        "code": {
+          "type": "object",
+          "description": "Code implementation",
+          "properties": {
+            "language": {
+              "type": "string",
+              "enum": ["python", "javascript", "typescript"]
+            },
+            "entry_point": {
+              "type": "string",
+              "description": "Entry function name"
+            },
+            "source": {
+              "type": "string",
+              "description": "Source code (or file path)"
+            }
+          }
+        },
+        "requirements": {
+          "type": "object",
+          "description": "Dependency requirements",
+          "properties": {
+            "python_packages": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Python package dependencies"
+            },
+            "node_packages": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Node.js package dependencies"
+            },
+            "external_apis": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "External API dependencies"
+            }
+          }
+        }
+      },
+      "required": ["manifest_version", "skill", "parameters"]
+    }
+  },
+  "examples": {
+    "simple_prompt_skill": {
+      "manifest_version": "1.0",
+      "skill": {
+        "id": "code_reviewer",
+        "name": "Code Reviewer",
+        "description": "Smart code review, identify potential issues and provide optimization suggestions",
+        "version": "1.0.0",
+        "author": "DATA-AI Team",
+        "category": "code_generation",
+        "type": "custom",
+        "icon": "🔍"
+      },
+      "parameters": [
+        {
+          "name": "code",
+          "type": "string",
+          "description": "Code to review",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Programming language",
+          "required": false,
+          "enum": ["python", "javascript", "typescript", "java", "cpp"]
+        },
+        {
+          "name": "strictness",
+          "type": "string",
+          "description": "Strictness level",
+          "default": "medium",
+          "enum": ["low", "medium", "high"]
+        }
+      ],
+      "prompts": {
+        "system_prompt": "You are a senior code review expert. Please review code according to the following standards:\n1. Check for syntax errors and potential bugs\n2. Evaluate code style and best practices\n3. Provide performance optimization suggestions\n4. Identify security vulnerabilities",
+        "user_prompt_template": "Please review the following {{language}} code, strictness: {{strictness}}\n\n```{{language}}\n{{code}}\n```"
+      }
+    },
+    "code_execution_skill": {
+      "manifest_version": "1.0",
+      "skill": {
+        "id": "data_analyzer",
+        "name": "Data Analyzer",
+        "description": "Perform data analysis and visualization",
+        "version": "1.0.0",
+        "category": "data_analysis",
+        "type": "custom",
+        "icon": "📊"
+      },
+      "parameters": [
+        { "name": "data", "type": "string", "description": "Data (CSV format or description)", "required": true },
+        { "name": "analysis_type", "type": "string", "description": "Analysis type", "enum": ["summary", "statistics", "visualization", "prediction"], "required": true }
+      ],
+      "tools": [{ "tool_name": "python_execute" }]
+    }
+  }
+}

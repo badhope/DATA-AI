@@ -1,0 +1,40 @@
+{
+  "llm": {
+    "provider": "aliyun",
+    "model": "qwen-plus-latest",
+    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "api_key": "YOUR_API_KEY_HERE",
+    "max_tokens": 4096,
+    "temperature": 0.7,
+    "top_p": 0.9,
+    "stream": false
+  },
+  "sandbox": {
+    "enabled": true,
+    "timeout": 60,
+    "allow_network": false
+  },
+  "knowledge_base": {
+    "enabled": true,
+    "vector_db": "sqlite",
+    "chunk_size": 1000,
+    "chunk_overlap": 200,
+    "embedding_model": "text-embedding-v3"
+  },
+  "conversation": {
+    "history_enabled": true,
+    "max_history": 50,
+    "auto_title": true
+  },
+  "display": {
+    "theme": "dark",
+    "thinking_chain": true,
+    "code_highlight": true,
+    "markdown_render": true
+  },
+  "agent": {
+    "max_steps": 5,
+    "auto_mode": true,
+    "reasoning_mode": "auto"
+  }
+}

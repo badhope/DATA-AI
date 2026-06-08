@@ -1,0 +1,117 @@
+# DATA-AI 2.0 - Main Configuration Template
+# Copy this file to config/config.toml and fill in your API keys.
+# Keys not listed in the loader's whitelist below are accepted but ignored;
+# they are kept here as documentation for what we plan to wire up next.
+
+# ---------------------------------------------------------------------------
+# [llm] — primary chat model
+# ---------------------------------------------------------------------------
+[llm]
+# The model id sent to the provider. The provider is auto-derived from the
+# id (e.g. model names starting with "gpt-" → openai, "qwen" → qwen, etc.)
+# and the base_url is filled in from PROVIDER_DEFAULT_BASE_URL when empty.
+model = "deepseek-chat"
+base_url = ""                      # leave empty to use the provider default
+api_key = "YOUR_API_KEY"           # required for any real provider
+max_tokens = 4096
+max_input_tokens = 32000           # None = no input truncation
+temperature = 0.2
+
+# ---------------------------------------------------------------------------
+# [llm.vision] — separate vision model (read by VisionConfig, not [llm])
+# ---------------------------------------------------------------------------
+[llm.vision]
+model = "gpt-4o"
+base_url = ""
+api_key = "YOUR_API_KEY"
+max_tokens = 4096
+temperature = 0.0
+
+# ---------------------------------------------------------------------------
+# [sandbox] — tool execution environment
+# ---------------------------------------------------------------------------
+[sandbox]
+use_sandbox = true                 # also accepted: enabled = true
+sandbox_type = "local"             # local | docker | daytona | remote
+work_dir = "/tmp/data-ai-sandbox"  # resolved to an absolute path on load
+timeout = 300
+network_enabled = true
+
+# Only used when sandbox_type = "docker"
+# image = "python:3.11-slim"
+# memory_limit = "1g"
+# cpu_limit = 2.0
+
+# ---------------------------------------------------------------------------
+# [memory] — long-term memory and conversation summarization
+# ---------------------------------------------------------------------------
+[memory]
+enable_long_term_memory = true
+enable_conversation_summarization = true
+keep_recent_messages = 20
+summary_interval = 10
+max_summary_length = 1000
+memory_dir = ""                    # default: ~/.data-ai/memory
+auto_save_interval = 30
+
+# ---------------------------------------------------------------------------
+# [memory.vector] — optional vector store (install the [chroma] extra to use)
+# ---------------------------------------------------------------------------
+[memory.vector]
+enabled = false
+store_type = "chroma"              # chroma | faiss | lance
+collection_name = "data-ai-memory"
+persist_directory = ""             # default: ~/.data-ai/vectorstore
+embedding_model = "all-MiniLM-L6-v2"
+
+# ---------------------------------------------------------------------------
+# [search] — web search tool backend
+# ---------------------------------------------------------------------------
+[search]
+engine = "DuckDuckGo"              # Google | Baidu | DuckDuckGo | Bing
+fallback_engines = ["Baidu", "Google"]
+retry_delay = 60
+max_retries = 3
+lang = "en"
+country = "us"
+
+# ---------------------------------------------------------------------------
+# Top-level flags
+# ---------------------------------------------------------------------------
+debug = false
+log_level = "INFO"                 # DEBUG | INFO | WARNING | ERROR | CRITICAL
+log_file = ""                      # empty = stdout only
+
+# ---------------------------------------------------------------------------
+# The following sections are NOT YET READ by Settings._merge_toml_config.
+# They are kept here so the file remains a useful reference; uncommenting
+# them has no effect today. We will wire them up in a follow-up release.
+# ---------------------------------------------------------------------------
+
+# [browser]
+# headless = false
+# disable_security = true
+# extra_chromium_args = []
+# max_content_length = 2000
+
+# [mcp]
+# server_reference = "data_ai.core.mcp.server"
+
+# [daytona]
+# daytona_api_key = "..."
+# daytona_server_url = "https://app.daytona.io/api"
+# daytona_target = "us"
+# sandbox_image_name = "whitezxj/sandbox:0.1.0"
+
+# [runflow]
+# use_data_analysis_agent = false
+
+# [memory_explorer]
+# enabled = true
+# show_statistics = true
+# enable_export = true
+
+# [summarization]
+# use_llm_summarization = true
+# min_length_for_summary = 500
+# summary_style = "bullet_points"

@@ -1,0 +1,155 @@
+{
+  "name": "Knowledge Base System Specification",
+  "version": "1.0.0",
+  "description": "Standard knowledge base system architecture definition",
+  "schemas": {
+    "KnowledgeBase": {
+      "type": "object",
+      "description": "Knowledge base main object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Knowledge base unique identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Knowledge base name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Knowledge base description"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Update time"
+        },
+        "embedding_model": {
+          "type": "string",
+          "description": "Embedding model"
+        },
+        "indexing_technique": {
+          "type": "string",
+          "enum": ["high_quality", "economy", "semantic"],
+          "default": "high_quality",
+          "description": "Indexing technique"
+        },
+        "retrieval_model": {
+          "type": "string",
+          "description": "Retrieval model"
+        },
+        "permission": {
+          "type": "string",
+          "enum": ["only_me", "all_team_members", "partial_members"],
+          "default": "only_me",
+          "description": "Permission setting"
+        }
+      }
+    },
+    "Document": {
+      "type": "object",
+      "description": "Document object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Document unique identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Document name"
+        },
+        "data_source_type": {
+          "type": "string",
+          "enum": ["upload_file", "web_url", "notion", "website", "custom_text"],
+          "description": "Data source type"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["queuing", "indexing", "available", "error", "paused"],
+          "description": "Processing status"
+        },
+        "processing_rule": {
+          "type": "object",
+          "description": "Processing rule configuration"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "DocumentProcessingRule": {
+      "type": "object",
+      "description": "Document processing rule",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["automatic", "custom"],
+          "default": "automatic",
+          "description": "Processing mode"
+        },
+        "rules": {
+          "type": "object",
+          "properties": {
+            "pre_processing_rules": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "enum": ["remove_extra_spaces", "remove_urls_emails", "remove_stopwords", "remove_non_text"]
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "default": [{"id": "remove_extra_spaces", "enabled": true}]
+            },
+            "segmentation": {
+              "type": "object",
+              "properties": {
+                "separator": {
+                  "type": "string",
+                  "default": "\\n\\n",
+                  "description": "Separator"
+                },
+                "max_tokens": {
+                  "type": "integer",
+                  "default": 1000,
+                  "description": "Maximum chunk tokens"
+                },
+                "chunk_size": {
+                  "type": "integer",
+                  "default": 1000
+                },
+                "chunk_overlap": {
+                  "type": "integer",
+                  "default": 200
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "supported_file_formats": {
+    "text": [".txt", ".md", ".markdown", ".rtf"],
+    "document": [".pdf", ".doc", ".docx", ".odt", ".pages"],
+    "spreadsheet": [".csv", ".xlsx", ".xls", ".ods"],
+    "presentation": [".pptx", ".ppt", ".odp"],
+    "html": [".html", ".htm", ".xhtml"],
+    "image": [".pdf", ".png", ".jpg", ".jpeg", ".gif", ".bmp"],
+    "code": [".py", ".js", ".ts", ".java", ".cpp", ".c", ".h", ".go", ".rs", ".sql"],
+    "other": [".json", ".xml", ".yaml", ".yml", ".toml", ".ini"]
+  },
+  "max_file_size": 50,
+  "max_files_per_upload": 10
+}
