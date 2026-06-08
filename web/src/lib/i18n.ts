@@ -29,7 +29,7 @@ export type Catalog = {
 const EN: Catalog = {
   common: {
     appName: "DATA-AI",
-    tagline: "Multi-LLM agent runtime with RAG, memory and 30+ tools",
+    tagline: "Production-grade AI Agent Framework",
     save: "Save",
     cancel: "Cancel",
     delete: "Delete",

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "data-ai"
 version = "2.0.1"
-description = "Multi-LLM agent runtime with RAG, memory and 30+ tools"
+description = "Production-grade AI Agent Framework with multi-model support, RAG, memory, and tool calling"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
