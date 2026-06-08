@@ -45,14 +45,19 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Smoke import
+        # 镜像 ENTRYPOINT 是 ``data-ai`` (CLI), 直接 ``docker run ... python -c "..."``
+        # 会被解释为 ``data-ai python ...``, 报 "No such command 'python'"。
+        # 用 ``--entrypoint python`` 覆盖后再跑 import 验证。
         run: |
-          docker run --rm ${{ env.IMAGE_NAME }}:${{ matrix.python-version }}-ci \
-            python -c "import data_ai.core.api.server as s; assert len(s.app.routes) > 30, f'only {len(s.app.routes)} routes'"
+          docker run --rm --entrypoint python \
+            ${{ env.IMAGE_NAME }}:${{ matrix.python-version }}-ci \
+            -c "import data_ai.core.api.server as s; assert len(s.app.routes) > 30, f'only {len(s.app.routes)} routes'"
 
       - name: Version probe
         run: |
-          docker run --rm ${{ env.IMAGE_NAME }}:${{ matrix.python-version }}-ci \
-            python -c "from data_ai import __version__; print(__version__)"
+          docker run --rm --entrypoint python \
+            ${{ env.IMAGE_NAME }}:${{ matrix.python-version }}-ci \
+            -c "from data_ai import __version__; print(__version__)"
 
   push:
     name: Push to GHCR

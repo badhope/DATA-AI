@@ -20,25 +20,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: codespell
-        uses: codespell-project/actions/codespell@main
+      # 直接 pip install codespell 而非依赖第三方 action, 避免 GitHub 找不到
+      # ``codespell-project/actions`` 仓库路径导致 "repository not found"。
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          ignore_words_list: "lits,rouge,connexion,re-use,re-used,re-using,re-use,referer,aks,fo,ue,ba,roth,statics,distrib,datas,hist,hte,ist"
-          path: "."
-          exclude: |
-            .git
-            node_modules
-            dist
-            build
-            .venv
-            web/dist
-            web/node_modules
-            *.lock
-            uv.lock
-            package-lock.json
-            __pycache__
-            data/
-            scripts/_*.py
+          python-version: "3.12"
+
+      - name: Install codespell
+        run: pip install --quiet codespell
+
+      - name: Run codespell
+        run: |
+          codespell \
+            --ignore-words-list="lits,rouge,connexion,re-use,re-used,re-using,re-use,referer,aks,fo,ue,ba,roth,statics,distrib,datas,hist,hte,ist" \
+            --skip=".git,node_modules,dist,build,.venv,web/dist,web/node_modules,*.lock,uv.lock,package-lock.json,__pycache__,data,scripts/_*.py,docs/DEPENDENCIES.md"
 
   link-check:
     name: Link check
@@ -49,8 +45,9 @@ jobs:
       - name: lychee
         uses: lycheeverse/lychee-action@v2
         with:
-          args: --no-progress --accept 200,206,301,302,403 --exclude-mail --exclude-loopback
+          # 新版 lychee 默认不扫 mail, 删 ``--exclude-mail``; 命名也用 camelCase ``lycheeVersion``。
+          args: --no-progress --accept 200,206,301,302,403 --exclude-loopback
           fail: true
-          lychee_version: latest
+          lycheeVersion: latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

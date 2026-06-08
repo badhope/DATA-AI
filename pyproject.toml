@@ -61,7 +61,9 @@ dev = [
     "pytest-asyncio>=0.24.0",
     "pytest-cov>=5.0.0",
     "pytest-rerunfailures>=14.0",
-    "ruff>=0.6.0",
+    # 锁定 ruff 版本: CI (>=0.6.0 会拉到 0.15.x) 与本地的格式规则不一致。
+    # 0.8.x 是 stable 0.8 series, 与 pyproject.toml 中 E/F/I/N/UP 规则集稳定匹配。
+    "ruff==0.8.4",
 ]
 all = [
     "anthropic>=0.40.0",
