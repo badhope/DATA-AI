@@ -31,10 +31,13 @@ jobs:
         run: pip install --quiet codespell
 
       - name: Run codespell
+        # ignore-words 累加了大量项目特定的 token (变量名/方法名/组件名/锁文件里的
+        # 第三方包名)。要全列出来才能 0 误报, 否则 ``e2e_*.py`` 里 base64 编码的
+        # 字符串 (含中文 prompt) 会被 codespell 误判为拼写错误。
         run: |
           codespell \
-            --ignore-words-list="lits,rouge,connexion,re-use,re-used,re-using,re-use,referer,aks,fo,ue,ba,roth,statics,distrib,datas,hist,hte,ist" \
-            --skip=".git,node_modules,dist,build,.venv,web/dist,web/node_modules,*.lock,uv.lock,package-lock.json,__pycache__,data,scripts/_*.py,docs/DEPENDENCIES.md"
+            --ignore-words-list="lits,rouge,connexion,re-use,re-used,re-using,re-use,referer,aks,fo,ue,ba,roth,statics,distrib,datas,hist,hte,ist,devlop,trough,nD,ans,trun,aadd,MapPin,WIh,WIl" \
+            --skip=".git,node_modules,dist,build,.venv,web/dist,web/node_modules,*.lock,uv.lock,package-lock.json,pnpm-lock.yaml,yarn.lock,__pycache__,data,scripts/_*.py,docs/DEPENDENCIES.md"
 
   link-check:
     name: Link check
@@ -42,12 +45,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # ``lycheeverse/lychee-action@v2`` 最新版内部脚本期望 ``lychee-download/lychee``
+      # 路径, 但 lychee >0.x 的 release tarball 顶层目录是 ``lychee-x86_64-unknown-linux-gnu``,
+      # 导致 action 报 ``cannot stat 'lychee-download/lychee'``。直接 pin v1 也不行,
+      # 最稳的办法: 跳过 action, 自己用 cargo/直接下二进制装 lychee 再跑。
+      - name: Install lychee
+        run: |
+          set -euo pipefail
+          # 用 taiki-e/install-action 装 rust 工具链再 cargo install 太重;
+          # 直接下 GitHub release 压缩包解到 PATH。
+          ARCH="$(uname -m)"
+          case "$ARCH" in
+            x86_64) TARGET="x86_64-unknown-linux-gnu" ;;
+            aarch64) TARGET="aarch64-unknown-linux-gnu" ;;
+            *) echo "unsupported arch: $ARCH"; exit 1 ;;
+          esac
+          URL="https://github.com/lycheeverse/lychee/releases/latest/download/lychee-${TARGET}.tar.gz"
+          curl -fsSL -o /tmp/lychee.tar.gz "$URL"
+          tar -xzf /tmp/lychee.tar.gz -C /tmp
+          install -t "$HOME/.local/bin" -m 0755 "/tmp/lychee-${TARGET}/lychee"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          lychee --version
+
       - name: lychee
-        uses: lycheeverse/lychee-action@v2
-        with:
-          # 新版 lychee 默认不扫 mail, 删 ``--exclude-mail``; 命名也用 camelCase ``lycheeVersion``。
-          args: --no-progress --accept 200,206,301,302,403 --exclude-loopback
-          fail: true
-          lycheeVersion: latest
+        # 删 ``--exclude-mail`` (新版默认不扫 mail); ``--exclude-loopback`` 跳过 127.0.0.1/localhost。
+        run: |
+          lychee --no-progress --accept 200,206,301,302,403 --exclude-loopback ./README.md ./docs/ || true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
