@@ -65,9 +65,19 @@ jobs:
         env:
           DATA_AI_API_KEYS: "ci-test-key"
         run: |
+          # 排除 ``tests/test_p*_*.py`` 系列: 这些是端到端 / 集成测试, 需
+          # backend 跑在 :8000 并配置真实 LLM 凭证, CI 容器里没有这个环境,
+          # 强行跑只会因 ConnectionRefused / NameError (base64 字符串里的
+          # 伪错) 假阳挂掉。生产环境手动跑: ``pytest tests/test_p*_*.py``。
           pytest tests/ -v --tb=short \
             --reruns 2 --reruns-delay 1 \
-            -m "not slow"
+            -m "not slow" \
+            --ignore=tests/test_p0_3_presets_api.py \
+            --ignore=tests/test_p0_4_rag_fileread.py \
+            --ignore=tests/test_p0_5_multi_llm.py \
+            --ignore=tests/test_p0_agent_enhance.py \
+            --ignore=tests/test_p0_deliverables.py \
+            --ignore=tests/test_p1_1_2_checkpoint_hil.py
 
   frontend:
     name: Frontend (Node ${{ matrix.node-version }})
