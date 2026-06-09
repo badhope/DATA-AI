@@ -26,4 +26,4 @@ keywords:
   - open-source
   - openai
 abstract: >-
-  Self-hosted single-backend AI agent platform. FastAPI + React 19, streaming chat, single + multi-agent teams, RAG, memory, code sandbox, 4 ready-made enterprise presets, 19 LLM providers, 30+ tools. One process, one command.
+  My single-process AI agent platform. One Python process: FastAPI backend, React 19 console, streaming chat, single + multi-agent teams, RAG, memory, a code sandbox, 19 LLM providers, 30+ tools, 4 enterprise presets. I built it because every AI demo I saw needed four containers and half a day of YAML to boot.
