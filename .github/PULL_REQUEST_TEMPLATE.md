@@ -1,35 +1,27 @@
-## Summary
+## What
 
-<!-- One-paragraph description of what this PR changes and why. -->
+<!-- One line: what this PR does -->
 
-## Linked Issues
+## Why
 
-<!-- Link the issue this fixes / relates to. "Fixes #123" auto-closes. -->
+<!-- The reason. What problem does this fix / what value does it add? -->
 
-## Type of change
+## How
 
-- [ ] Bug fix (non-breaking change that fixes an issue)
-- [ ] New feature (non-breaking change that adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to change)
-- [ ] Documentation / CI / tooling only (no runtime change)
+<!-- Approach, breaking changes, anything weird you did -->
 
-## How was this tested?
+## Tested
 
-- [ ] Unit / integration tests added or updated
-- [ ] Manual verification (describe below)
-
-<!-- What did you run, what did you see? -->
+<!-- How you tested. If you didn't, say so and tell me why -->
 
 ## Checklist
 
 - [ ] I have read [`CONTRIBUTING.md`](./CONTRIBUTING.md)
-- [ ] I have added tests that prove the fix / feature works
-- [ ] New and existing unit tests pass locally (`make test` / `pnpm test` / `pytest`)
-- [ ] I have updated relevant documentation
-- [ ] I have added an entry to `CHANGELOG.md` under "Unreleased"
-- [ ] I have not introduced any new linter / typecheck warnings
-- [ ] I have not committed any secrets, generated build output, or large binaries
+- [ ] Tests pass locally (and CI is green)
+- [ ] I didn't add any new linter / typecheck warnings
+- [ ] I didn't commit any secrets, build output, or large binaries
+- [ ] I added a `CHANGELOG.md` entry under "Unreleased" if it matters
 
 ## Screenshots / Logs
 
-<!-- Drag in images for UI changes. Paste logs (redacted) for runtime changes. -->
+<!-- Drag in images for UI changes. Paste (redacted) logs for runtime changes. -->

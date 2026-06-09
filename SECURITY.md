@@ -1,51 +1,35 @@
-# Security Policy
+# Security
 
-Thanks for helping keep this project and its users safe. We take all
-vulnerability reports seriously.
+Found a hole? **Don't file a public issue.** Open a private security
+advisory or email me (the address is in `CITATION.cff` if there's one;
+otherwise it's on my profile page). I prefer the advisory form because
+GitHub handles the disclosure timeline.
 
-## Supported Versions
+What I'll do:
 
-Only the latest release on the `main` branch receives security fixes.
-Older versions are best-effort.
+- Reply within 3 business days.
+- Triage and try to reproduce within 10 business days.
+- Ship a fix, or at least a documented mitigation, as soon as I can.
+- Credit you in the advisory if you want it. Say "anonymous" if you don't.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| latest  | :white_check_mark: |
-| older   | :x:                |
+I follow responsible disclosure: please keep the report private until I
+publish a fix and (if needed) a CVE / advisory. I won't sue you for
+security research done in good faith, and I won't go after security
+researchers for things that are obviously bugs.
 
-## Reporting a Vulnerability
+## What I patch
 
-**Please do not file a public issue.** Instead, report privately via one of:
+Only the latest commit on `main`. I don't backport. If you're on an
+older version, the right fix is to upgrade.
 
-- GitHub Security Advisories: open a
-  [private security advisory](../../security/advisories/new) on this
-  repository.
-- Email: see the contact in `CITATION.cff` / the maintainer profile.
+## In scope
 
-We aim to:
+- Code in this repository.
+- Official container images and release artifacts that came from this
+  repo (when they exist).
 
-- acknowledge the report within **3 business days**,
-- triage and reproduce within **10 business days**,
-- ship a fix or a documented mitigation as soon as practical.
+## Out of scope
 
-We follow responsible disclosure: we ask reporters to keep the issue
-private until we publish a fix and a CVE / advisory, and we credit the
-reporter in the advisory (unless you prefer to stay anonymous).
-
-## Scope
-
-In scope:
-
-- code under this repository
-- official container images and release artifacts published from this repo
-
-Out of scope:
-
-- third-party dependencies (report upstream unless we configured a
-  pinned version that we shipped)
-- social-engineering, physical, denial-of-service, or scanner spam
-
-## Recognition
-
-This project adheres to a "do the right thing" disclosure process.
-We won't sue you for security research done in good faith.
+- Third-party dependencies. Report upstream unless I pinned and shipped
+  a vulnerable version myself.
+- Scanners, social engineering, DoS, or "you used a default port".
