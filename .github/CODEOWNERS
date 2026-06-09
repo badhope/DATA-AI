@@ -1,0 +1,12 @@
+# Code owners: auto-assign reviewers for pull requests.
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything in the repo.
+*       @badhope
+
+# Security-sensitive files get an explicit owner reminder.
+/SECURITY.md         @badhope
+/.github/workflows/  @badhope
+/.gitleaks.toml      @badhope
+/.github/dependabot.yml @badhope
+/CODEOWNERS          @badhope

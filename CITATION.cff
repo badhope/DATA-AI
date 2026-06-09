@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software in academic work, please cite it using the
+  metadata below.
+title: DATA-AI
+authors:
+  - family-names: badhope
+    given-names: badhope
+    alias: badhope
+    orcid: https://orcid.org/0000-0000-0000-0000
+identifiers:
+  - type: url
+    value: https://github.com/badhope/DATA-AI
+license: MIT
+type: software
+url: https://github.com/badhope/DATA-AI
+repository-code: https://github.com/badhope/DATA-AI
+keywords:
+  - open-source, software
+abstract: >-
+  DATA-AI — a self-hosted single-backend AI agent platform. FastAPI + React 19 with streaming chat, single- and multi-agent teams, RAG, memory, ContextStore, code sandbox, intent normalization, 4 ready-made enterprise agent presets, 30+ office tools, and 19 LLM providers.
