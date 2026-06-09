@@ -7,7 +7,6 @@ authors:
   - family-names: badhope
     given-names: badhope
     alias: badhope
-    orcid: https://orcid.org/0000-0000-0000-0000
 identifiers:
   - type: url
     value: https://github.com/badhope/DATA-AI
@@ -16,6 +15,15 @@ type: software
 url: https://github.com/badhope/DATA-AI
 repository-code: https://github.com/badhope/DATA-AI
 keywords:
-  - open-source, software
+  - ai-agent
+  - fastapi
+  - llm
+  - anthropic
+  - chatbot
+  - code-execution
+  - memory
+  - multi-agent
+  - open-source
+  - openai
 abstract: >-
-  DATA-AI — a self-hosted single-backend AI agent platform. FastAPI + React 19 with streaming chat, single- and multi-agent teams, RAG, memory, ContextStore, code sandbox, intent normalization, 4 ready-made enterprise agent presets, 30+ office tools, and 19 LLM providers.
+  Self-hosted single-backend AI agent platform. FastAPI + React 19, streaming chat, single + multi-agent teams, RAG, memory, code sandbox, 4 ready-made enterprise presets, 19 LLM providers, 30+ tools. One process, one command.
