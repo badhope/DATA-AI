@@ -1,30 +1,47 @@
-<div align="center">
-
 # DATA-AI
 
-A Python agent runtime, an OpenAI-compatible chat backend, and a React
-web console for office work — chat, agents, RAG, memory, code sandbox,
-and 30+ tools in one process.
+A single Python process that gives you an OpenAI-compatible chat API,
+a React web console, a multi-agent runtime, RAG, long-term memory,
+a code sandbox, and 30+ tools — and the whole thing is one repo,
+one `make up`, one `python -m data_ai.core.api.server`.
 
-</div>
+I built this because every "AI platform" demo I saw needed four
+containers and a half-day of YAML to even boot. I wanted something I
+could `git clone` and have running before my coffee got cold.
 
 ---
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Node 18+](https://img.shields.io/badge/node-18%2B-339933.svg)](https://nodejs.org)
-[![CI](https://github.com/badhope/DATA-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/badhope/DATA-AI/actions/workflows/ci.yml)
-[![Last commit](https://img.shields.io/github/last-commit/badhope/DATA-AI)](https://github.com/badhope/DATA-AI/commits/main)
-[![Issues](https://img.shields.io/github/issues/badhope/DATA-AI)](https://github.com/badhope/DATA-AI/issues)
-[![Stars](https://img.shields.io/github/stars/badhope/DATA-AI)](https://github.com/badhope/DATA-AI/stargazers)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688.svg)](https://fastapi.tiangolo.com)
-[![React 19](https://img.shields.io/badge/React-19-149eca.svg)](https://react.dev)
-[![Vite 6](https://img.shields.io/badge/Vite-6-646cff.svg)](https://vitejs.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6.svg)](https://www.typescriptlang.org)
+## What it actually does
 
-[**English**](README.md) · [**中文**](README_zh.md)
+- **Single agent, multi-agent teams.** Consensus (LLM synthesis, vote,
+  semantic), reflection, iteration limits. The agent loop is real —
+  every tool call hits a real adapter; the failures are real too.
+- **19 LLM providers** behind one registry. OpenAI, Anthropic, Google,
+  Azure, Bedrock, DeepSeek, SiliconFlow, Qwen, Zhipu, Moonshot, Yi,
+  Baichuan, Doubao, StepFun, Ollama, vLLM, LM Studio, and a built-in
+  offline model for tests.
+- **30+ tools** for file I/O, Python / Bash / Node sandbox, browser
+  automation, web search, PDF / Word / Excel / PPT, data analysis.
+- **RAG + memory in the same process.** In-memory, FAISS, Chroma, or
+  LanceDB. Long-term memory is wired into the chat loop, not bolted
+  on after the fact.
+- **ContextStore** — named, file-backed, JSON-tree project memory. Save
+  drafts, outlines, character sheets; diff them across commits; never
+  lose them inside a chat session.
+- **4 ready-made enterprise presets** (customer service, finance
+  analyst, secretary, novel writer) so you don't start from a blank
+  system prompt.
 
-[Quick Start](#quick-start) · [Features](#features) · [Web Console](#web-console) · [Architecture](#architecture) · [Docs](docs/) · [Contributing](CONTRIBUTING.md)
+## Quick start
+
+```bash
+cp .env.example .env
+# add your OPENAI_API_KEY
+make up
+# open http://localhost:3000
+```
+
+That's the whole on-ramp. Everything else is in [`docs/`](docs/).
 
 ---
 
