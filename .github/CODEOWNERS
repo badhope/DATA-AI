@@ -1,12 +1,22 @@
-# Code owners: auto-assign reviewers for pull requests.
-# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# CODEOWNERS — default review ownership
+# badhope is the sole owner; replace with team handles in a
+# multi-maintainer setup.
 
-# Default owner for everything in the repo.
+# Default: everything
 *       @badhope
 
-# Security-sensitive files get an explicit owner reminder.
-/SECURITY.md         @badhope
-/.github/workflows/  @badhope
-/.gitleaks.toml      @badhope
-/.github/dependabot.yml @badhope
-/CODEOWNERS          @badhope
+# GitHub configuration
+/.github/        @badhope
+
+# Documentation
+/docs/           @badhope
+/README.md       @badhope
+/CHANGELOG.md    @badhope
+
+# Build / release config
+/package.json    @badhope
+/uv.lock         @badhope
+/package-lock.json @badhope
+/pnpm-lock.yaml  @badhope
+/Cargo.toml      @badhope
+/Cargo.lock      @badhope
