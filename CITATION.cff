@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software in academic work, please cite it using the
+  metadata below.
+title: DATA-AI
+authors:
+  - family-names: badhope
+    given-names: badhope
+    alias: badhope
+identifiers:
+  - type: url
+    value: https://github.com/badhope/DATA-AI
+license: MIT
+type: software
+url: https://github.com/badhope/DATA-AI
+repository-code: https://github.com/badhope/DATA-AI
+keywords:
+  - ai-agent
+  - fastapi
+  - llm
+  - anthropic
+  - chatbot
+  - code-execution
+  - memory
+  - multi-agent
+  - open-source
+  - openai
+abstract: >-
+  My single-process AI agent platform. One Python process: FastAPI backend, React 19 console, streaming chat, single + multi-agent teams, RAG, memory, a code sandbox, 19 LLM providers, 30+ tools, 4 enterprise presets. I built it because every AI demo I saw needed four containers and half a day of YAML to boot.
