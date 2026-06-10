@@ -1,43 +1,40 @@
 ---
 name: Bug report
-about: Create a report to help us improve
-title: '[BUG] '
+about: Something is broken
+title: "[bug] "
 labels: bug
-assignees: ''
-
+assignees: badhope
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+## Describe the bug
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+<!-- A clear and concise description of what the bug is. -->
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+## To reproduce
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
-
-**Environment (please complete the following information):**
- - OS: [e.g. Ubuntu 22.04]
- - Python Version: [e.g. 3.10]
- - DATA-AI Version: [e.g. 0.1.0]
- - Installation Method: [e.g. pip, source]
-
-**Configuration**
-```toml
-# Your config.toml (remove sensitive info)
+```bash
+# Minimal reproduction steps
 ```
 
-**Logs**
-```
-Paste relevant logs here
-```
+## Expected behaviour
 
-**Additional context**
-Add any other context about the problem here.
+<!-- What you expected to happen. -->
+
+## Actual behaviour
+
+<!-- What actually happened. Include stack traces, error messages,
+screenshots. -->
+
+## Environment
+
+- OS: <!-- e.g. macOS 14.4 -->
+- Runtime version: <!-- e.g. Node 20.11, Python 3.11 -->
+- Package version: <!-- git rev-parse HEAD, or npm/pip version -->
+- Date observed: <!-- 2026-06-10 -->
+
+## Severity
+
+- [ ] Blocker — production is down
+- [ ] High — feature unusable
+- [ ] Medium — workaround exists
+- [ ] Low — cosmetic
