@@ -1,0 +1,120 @@
+from configs import data_config
+from constants import HEADER_NAME_APP_CODE, HEADER_NAME_CSRF_TOKEN, HEADER_NAME_PASSPORT
+from data_app import DATAApp
+
+BASE_CORS_HEADERS: tuple[str, ...] = ("Content-Type", HEADER_NAME_APP_CODE, HEADER_NAME_PASSPORT)
+SERVICE_API_HEADERS: tuple[str, ...] = (*BASE_CORS_HEADERS, "Authorization")
+AUTHENTICATED_HEADERS: tuple[str, ...] = (*SERVICE_API_HEADERS, HEADER_NAME_CSRF_TOKEN)
+FILES_HEADERS: tuple[str, ...] = (*BASE_CORS_HEADERS, HEADER_NAME_CSRF_TOKEN)
+EMBED_HEADERS: tuple[str, ...] = ("Content-Type", HEADER_NAME_APP_CODE)
+EXPOSED_HEADERS: tuple[str, ...] = ("X-Version", "X-Env", "X-Trace-Id")
+OPENAPI_HEADERS: tuple[str, ...] = ("Authorization", "Content-Type", HEADER_NAME_CSRF_TOKEN)
+OPENAPI_MAX_AGE_SECONDS: int = 600
+
+
+def _apply_cors_once(bp, /, **cors_kwargs):
+    """Make CORS idempotent so blueprints can be reused across multiple app instances."""
+
+    if getattr(bp, "_data_cors_applied", False):
+        return
+
+    from flask_cors import CORS
+
+    CORS(bp, **cors_kwargs)
+    bp._data_cors_applied = True
+
+
+def init_app(app: DATAApp):
+    # register blueprint routers
+
+    from controllers.console import bp as console_app_bp
+    from controllers.files import bp as files_bp
+    from controllers.inner_api import bp as inner_api_bp
+    from controllers.mcp import bp as mcp_bp
+    from controllers.openapi import bp as openapi_bp
+    from controllers.service_api import bp as service_api_bp
+    from controllers.trigger import bp as trigger_bp
+    from controllers.web import bp as web_bp
+
+    _apply_cors_once(
+        service_api_bp,
+        allow_headers=list(SERVICE_API_HEADERS),
+        methods=["GET", "PUT", "POST", "DELETE", "OPTIONS", "PATCH"],
+        expose_headers=list(EXPOSED_HEADERS),
+    )
+    app.register_blueprint(service_api_bp)
+
+    if data_config.OPENAPI_ENABLED:
+        # User-scoped programmatic API. Default empty allowlist = same-origin
+        # only; expand via OPENAPI_CORS_ALLOW_ORIGINS for third-party
+        # integrations. supports_credentials so cookie-authed approve/deny
+        # work; cross-origin OPTIONS without an allowed origin will fail
+        # the same as on the console blueprint.
+        _apply_cors_once(
+            openapi_bp,
+            resources={r"/*": {"origins": data_config.OPENAPI_CORS_ALLOW_ORIGINS}},
+            supports_credentials=True,
+            allow_headers=list(OPENAPI_HEADERS),
+            methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+            expose_headers=list(EXPOSED_HEADERS),
+            max_age=OPENAPI_MAX_AGE_SECONDS,
+        )
+        app.register_blueprint(openapi_bp)
+
+    _apply_cors_once(
+        web_bp,
+        resources={
+            # Embedded bot endpoints (unauthenticated, cross-origin safe)
+            r"^/chat-messages$": {
+                "origins": data_config.WEB_API_CORS_ALLOW_ORIGINS,
+                "supports_credentials": False,
+                "allow_headers": list(EMBED_HEADERS),
+                "methods": ["GET", "POST", "OPTIONS"],
+            },
+            r"^/chat-messages/.*": {
+                "origins": data_config.WEB_API_CORS_ALLOW_ORIGINS,
+                "supports_credentials": False,
+                "allow_headers": list(EMBED_HEADERS),
+                "methods": ["GET", "POST", "OPTIONS"],
+            },
+            # Default web application endpoints (authenticated)
+            r"/*": {
+                "origins": data_config.WEB_API_CORS_ALLOW_ORIGINS,
+                "supports_credentials": True,
+                "allow_headers": list(AUTHENTICATED_HEADERS),
+                "methods": ["GET", "PUT", "POST", "DELETE", "OPTIONS", "PATCH"],
+            },
+        },
+        expose_headers=list(EXPOSED_HEADERS),
+    )
+    app.register_blueprint(web_bp)
+
+    _apply_cors_once(
+        console_app_bp,
+        resources={r"/*": {"origins": data_config.CONSOLE_CORS_ALLOW_ORIGINS}},
+        supports_credentials=True,
+        allow_headers=list(AUTHENTICATED_HEADERS),
+        methods=["GET", "PUT", "POST", "DELETE", "OPTIONS", "PATCH"],
+        expose_headers=list(EXPOSED_HEADERS),
+    )
+    app.register_blueprint(console_app_bp)
+
+    _apply_cors_once(
+        files_bp,
+        allow_headers=list(FILES_HEADERS),
+        methods=["GET", "PUT", "POST", "DELETE", "OPTIONS", "PATCH"],
+        expose_headers=list(EXPOSED_HEADERS),
+    )
+    app.register_blueprint(files_bp)
+
+    app.register_blueprint(inner_api_bp)
+    app.register_blueprint(mcp_bp)
+
+    # Register trigger blueprint with CORS for webhook calls
+    _apply_cors_once(
+        trigger_bp,
+        allow_headers=["Content-Type", "Authorization", "X-App-Code"],
+        methods=["GET", "PUT", "POST", "DELETE", "OPTIONS", "PATCH", "HEAD"],
+        expose_headers=list(EXPOSED_HEADERS),
+    )
+    app.register_blueprint(trigger_bp)

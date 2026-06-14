@@ -1,0 +1,14 @@
+[project]
+name = "data-vdb-oracle"
+version = "0.0.1"
+
+dependencies = [
+    "oracledb==3.4.2",
+]
+description = "DATA vector store backend (data-vdb-oracle)."
+
+[project.entry-points."data.vector_backends"]
+oracle = "data_vdb_oracle.oraclevector:OracleVectorFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

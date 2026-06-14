@@ -1,0 +1,200 @@
+import type { Node } from 'reactflow'
+import type { ToolValue } from '@/app/components/workflow/block-selector/types'
+import type { NodeOutPutVar } from '@/app/components/workflow/types'
+import { cn } from '@langgenius/data-ui/cn'
+import {
+  RiAddLine,
+} from '@remixicon/react'
+import * as React from 'react'
+import { useTranslation } from 'react-i18next'
+import ActionButton from '@/app/components/base/action-button'
+import Divider from '@/app/components/base/divider'
+import { ArrowDownRoundFill } from '@/app/components/base/icons/src/vender/solid/general'
+import { Infotip } from '@/app/components/base/infotip'
+import ToolSelector from '@/app/components/plugins/plugin-detail-panel/tool-selector'
+import { useMCPToolAvailability } from '@/app/components/workflow/nodes/_base/components/mcp-tool-availability'
+import { useAllMCPTools } from '@/service/use-tools'
+
+type Props = Readonly<{
+  disabled?: boolean
+  value: ToolValue[]
+  label: string
+  required?: boolean
+  tooltip?: React.ReactNode
+  supportCollapse?: boolean
+  scope?: string
+  onChange: (value: ToolValue[]) => void
+  nodeOutputVars: NodeOutPutVar[]
+  availableNodes: Node[]
+  nodeId?: string
+}>
+
+const MultipleToolSelector = ({
+  disabled,
+  value = [],
+  label,
+  required,
+  tooltip,
+  supportCollapse,
+  scope,
+  onChange,
+  nodeOutputVars,
+  availableNodes,
+  nodeId,
+}: Props) => {
+  const { t } = useTranslation()
+  const { allowed: isMCPToolAllowed } = useMCPToolAvailability()
+  const { data: mcpTools } = useAllMCPTools()
+  const enabledCount = value.filter((item) => {
+    const isMCPTool = mcpTools?.find(tool => tool.id === item.provider_name)
+    if (isMCPTool)
+      return item.enabled && isMCPToolAllowed
+    return item.enabled
+  }).length
+  // collapse control
+  const [collapse, setCollapse] = React.useState(false)
+  const handleCollapse = () => {
+    if (supportCollapse)
+      setCollapse(!collapse)
+  }
+
+  // add tool
+  const [open, setOpen] = React.useState(false)
+  const [panelShowState, setPanelShowState] = React.useState(true)
+  const handleAdd = (val: ToolValue) => {
+    const newValue = [...value, val]
+    // deduplication
+    const deduplication = newValue.reduce((acc, cur) => {
+      if (!acc.find(item => item.provider_name === cur.provider_name && item.tool_name === cur.tool_name))
+        acc.push(cur)
+      return acc
+    }, [] as ToolValue[])
+    // update value
+    onChange(deduplication)
+    setOpen(false)
+  }
+
+  const handleAddMultiple = (val: ToolValue[]) => {
+    const newValue = [...value, ...val]
+    // deduplication
+    const deduplication = newValue.reduce((acc, cur) => {
+      if (!acc.find(item => item.provider_name === cur.provider_name && item.tool_name === cur.tool_name))
+        acc.push(cur)
+      return acc
+    }, [] as ToolValue[])
+    // update value
+    onChange(deduplication)
+    setOpen(false)
+  }
+
+  // delete tool
+  const handleDelete = (index: number) => {
+    const newValue = [...value]
+    newValue.splice(index, 1)
+    onChange(newValue)
+  }
+
+  // configure tool
+  const handleConfigure = (val: ToolValue, index: number) => {
+    const newValue = [...value]
+    newValue[index] = val
+    onChange(newValue)
+  }
+
+  return (
+    <>
+      <div className="mb-1 flex items-center">
+        <div
+          className={cn('relative flex grow items-center gap-0.5', supportCollapse && 'cursor-pointer')}
+          onClick={handleCollapse}
+        >
+          <div className="flex h-6 items-center system-sm-semibold-uppercase text-text-secondary">{label}</div>
+          {required && <div className="text-red-500">*</div>}
+          {tooltip
+            ? (
+                <Infotip
+                  aria-label={typeof tooltip === 'string' ? tooltip : label}
+                  className="size-3.5"
+                >
+                  {tooltip}
+                </Infotip>
+              )
+            : null}
+          {supportCollapse && (
+            <ArrowDownRoundFill
+              className={cn(
+                'size-4 cursor-pointer text-text-quaternary group-hover/collapse:text-text-secondary',
+                collapse && 'rotate-270',
+              )}
+            />
+          )}
+        </div>
+        {value.length > 0 && (
+          <>
+            <div className="flex items-center gap-1 system-xs-medium text-text-tertiary">
+              <span>{`${enabledCount}/${value.length}`}</span>
+              <span>{t('agent.tools.enabled', { ns: 'appDebug' })}</span>
+            </div>
+            <Divider type="vertical" className="mr-1 ml-3 h-3" />
+          </>
+        )}
+        {!disabled && (
+          <ActionButton
+            className="mx-1"
+            onClick={() => {
+              setCollapse(false)
+              setOpen(!open)
+              setPanelShowState(true)
+            }}
+          >
+            <RiAddLine className="size-4" />
+          </ActionButton>
+        )}
+      </div>
+      {!collapse && (
+        <>
+          {value.length === 0 && (
+            <div className="flex justify-center rounded-[10px] bg-background-section p-3 system-xs-regular text-text-tertiary">{t('detailPanel.toolSelector.empty', { ns: 'plugin' })}</div>
+          )}
+          {value.length > 0 && value.map((item, index) => (
+            <div className="mb-1" key={index}>
+              <ToolSelector
+                nodeId={nodeId}
+                nodeOutputVars={nodeOutputVars}
+                availableNodes={availableNodes}
+                scope={scope}
+                value={item}
+                selectedTools={value}
+                onSelect={item => handleConfigure(item, index)}
+                onSelectMultiple={handleAddMultiple}
+                onDelete={() => handleDelete(index)}
+                supportEnableSwitch
+                isEdit
+              />
+            </div>
+          ))}
+        </>
+      )}
+      <ToolSelector
+        nodeId={nodeId}
+        nodeOutputVars={nodeOutputVars}
+        availableNodes={availableNodes}
+        scope={scope}
+        value={undefined}
+        selectedTools={value}
+        onSelect={handleAdd}
+        controlledState={open}
+        onControlledStateChange={setOpen}
+        trigger={
+          <div className=""></div>
+        }
+        panelShowState={panelShowState}
+        onPanelShowStateChange={setPanelShowState}
+        isEdit={false}
+        onSelectMultiple={handleAddMultiple}
+      />
+    </>
+  )
+}
+
+export default MultipleToolSelector

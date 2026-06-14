@@ -1,0 +1,10 @@
+[project]
+name = "data-trace-opik"
+version = "0.0.1"
+dependencies = [
+    "opik~=1.11.2",
+]
+description = "DATA ops tracing provider (Opik)."
+
+[tool.setuptools.packages.find]
+where = ["src"]

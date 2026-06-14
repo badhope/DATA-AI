@@ -1,0 +1,13 @@
+[project]
+name = "data-vdb-alibabacloud-mysql"
+version = "0.0.1"
+dependencies = [
+    "mysql-connector-python>=9.3.0,<10.0.0",
+]
+description = "DATA vector store backend (data-vdb-alibabacloud-mysql)."
+
+[project.entry-points."data.vector_backends"]
+alibabacloud_mysql = "data_vdb_alibabacloud_mysql.alibabacloud_mysql_vector:AlibabaCloudMySQLVectorFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,12 @@
+[project]
+name = "data-vdb-relyt"
+version = "0.0.1"
+
+dependencies = []
+description = "DATA vector store backend (data-vdb-relyt)."
+
+[project.entry-points."data.vector_backends"]
+relyt = "data_vdb_relyt.relyt_vector:RelytVectorFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

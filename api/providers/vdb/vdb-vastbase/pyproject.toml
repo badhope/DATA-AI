@@ -1,0 +1,14 @@
+[project]
+name = "data-vdb-vastbase"
+version = "0.0.1"
+
+dependencies = [
+    "pyobvector==0.2.25",
+]
+description = "DATA vector store backend (data-vdb-vastbase)."
+
+[project.entry-points."data.vector_backends"]
+vastbase = "data_vdb_vastbase.vastbase_vector:VastbaseVectorFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

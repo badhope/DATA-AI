@@ -1,0 +1,13 @@
+[project]
+name = "data-vdb-baidu"
+version = "0.0.1"
+dependencies = [
+    "pymochow==2.4.0",
+]
+description = "DATA vector store backend (data-vdb-baidu)."
+
+[project.entry-points."data.vector_backends"]
+baidu = "data_vdb_baidu.baidu_vector:BaiduVectorFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

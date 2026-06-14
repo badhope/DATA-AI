@@ -1,0 +1,70 @@
+import json
+import os
+import threading
+
+from flask import Response
+
+from configs import data_config
+from controllers.console.admin import admin_required
+from data_app import DATAApp
+
+
+def init_app(app: DATAApp):
+    @app.after_request
+    def after_request(response):
+        """Add Version headers to the response."""
+        response.headers.add("X-Version", data_config.project.version)
+        response.headers.add("X-Env", data_config.DEPLOY_ENV)
+        return response
+
+    @app.route("/health")
+    def health():
+        return Response(
+            json.dumps({"pid": os.getpid(), "status": "ok", "version": data_config.project.version}),
+            status=200,
+            content_type="application/json",
+        )
+
+    @app.route("/threads")
+    @admin_required
+    def threads():
+        num_threads = threading.active_count()
+        threads = threading.enumerate()
+
+        thread_list = []
+        for thread in threads:
+            thread_name = thread.name
+            thread_id = thread.ident
+            is_alive = thread.is_alive()
+
+            thread_list.append(
+                {
+                    "name": thread_name,
+                    "id": thread_id,
+                    "is_alive": is_alive,
+                }
+            )
+
+        return {
+            "pid": os.getpid(),
+            "thread_num": num_threads,
+            "threads": thread_list,
+        }
+
+    @app.route("/db-pool-stat")
+    @admin_required
+    def pool_stat():
+        from extensions.ext_database import db
+
+        engine = db.engine
+        # TODO: Fix the type error
+        # FIXME maybe its sqlalchemy issue
+        return {
+            "pid": os.getpid(),
+            "pool_size": engine.pool.size(),  # type: ignore
+            "checked_in_connections": engine.pool.checkedin(),  # type: ignore
+            "checked_out_connections": engine.pool.checkedout(),  # type: ignore
+            "overflow_connections": engine.pool.overflow(),  # type: ignore
+            "connection_timeout": engine.pool.timeout(),  # type: ignore
+            "recycle_time": db.engine.pool._recycle,  # type: ignore
+        }

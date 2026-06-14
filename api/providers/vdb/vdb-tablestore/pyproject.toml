@@ -1,0 +1,14 @@
+[project]
+name = "data-vdb-tablestore"
+version = "0.0.1"
+
+dependencies = [
+    "tablestore==6.4.4",
+]
+description = "DATA vector store backend (data-vdb-tablestore)."
+
+[project.entry-points."data.vector_backends"]
+tablestore = "data_vdb_tablestore.tablestore_vector:TableStoreVectorFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

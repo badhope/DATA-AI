@@ -1,0 +1,14 @@
+[project]
+name = "data-vdb-upstash"
+version = "0.0.1"
+
+dependencies = [
+    "upstash-vector==0.8.0",
+]
+description = "DATA vector store backend (data-vdb-upstash)."
+
+[project.entry-points."data.vector_backends"]
+upstash = "data_vdb_upstash.upstash_vector:UpstashVectorFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

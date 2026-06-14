@@ -1,0 +1,12 @@
+[project]
+name = "data-vdb-opengauss"
+version = "0.0.1"
+
+dependencies = []
+description = "DATA vector store backend (data-vdb-opengauss)."
+
+[project.entry-points."data.vector_backends"]
+opengauss = "data_vdb_opengauss.opengauss:OpenGaussFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

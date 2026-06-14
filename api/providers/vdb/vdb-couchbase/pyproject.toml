@@ -1,0 +1,14 @@
+[project]
+name = "data-vdb-couchbase"
+version = "0.0.1"
+
+dependencies = [
+    "couchbase~=4.6.0",
+]
+description = "DATA vector store backend (data-vdb-couchbase)."
+
+[project.entry-points."data.vector_backends"]
+couchbase = "data_vdb_couchbase.couchbase_vector:CouchbaseVectorFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

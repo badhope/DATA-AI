@@ -1,0 +1,14 @@
+[project]
+name = "data-vdb-tencent"
+version = "0.0.1"
+
+dependencies = [
+    "tcvectordb~=2.1.0",
+]
+description = "DATA vector store backend (data-vdb-tencent)."
+
+[project.entry-points."data.vector_backends"]
+tencent = "data_vdb_tencent.tencent_vector:TencentVectorFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

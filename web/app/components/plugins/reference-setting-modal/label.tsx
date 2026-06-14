@@ -1,0 +1,28 @@
+'use client'
+import type { FC } from 'react'
+import { cn } from '@langgenius/data-ui/cn'
+import * as React from 'react'
+
+type Props = Readonly<{
+  label: string
+  description?: string
+}>
+
+const Label: FC<Props> = ({
+  label,
+  description,
+}) => {
+  return (
+    <div>
+      <div className={cn('flex h-6 items-center', description && 'h-4')}>
+        <span className="system-sm-semibold text-text-secondary">{label}</span>
+      </div>
+      {description && (
+        <div className="mt-1 body-xs-regular text-text-tertiary">
+          {description}
+        </div>
+      )}
+    </div>
+  )
+}
+export default React.memo(Label)

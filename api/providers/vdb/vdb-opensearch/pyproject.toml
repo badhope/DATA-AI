@@ -1,0 +1,14 @@
+[project]
+name = "data-vdb-opensearch"
+version = "0.0.1"
+
+dependencies = [
+    "opensearch-py==3.1.0",
+]
+description = "DATA vector store backend (data-vdb-opensearch)."
+
+[project.entry-points."data.vector_backends"]
+opensearch = "data_vdb_opensearch.opensearch_vector:OpenSearchVectorFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

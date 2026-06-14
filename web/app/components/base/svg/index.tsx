@@ -1,0 +1,22 @@
+import { cn } from '@langgenius/data-ui/cn'
+import * as React from 'react'
+import ActionButton from '../action-button'
+import s from './style.module.css'
+
+type ISVGBtnProps = {
+  isSVG: boolean
+  setIsSVG: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+const SVGBtn = ({
+  isSVG,
+  setIsSVG,
+}: ISVGBtnProps) => {
+  return (
+    <ActionButton onClick={() => { setIsSVG(prevIsSVG => !prevIsSVG) }}>
+      <div className={cn('size-4', isSVG ? s.svgIconed : s.svgIcon)}></div>
+    </ActionButton>
+  )
+}
+
+export default SVGBtn

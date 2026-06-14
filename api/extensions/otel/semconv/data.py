@@ -1,0 +1,35 @@
+"""DATA-specific semantic convention definitions."""
+
+
+class DATASpanAttributes:
+    """Attribute names for DATA-specific spans."""
+
+    APP_ID = "data.app_id"
+    """Application identifier."""
+
+    TENANT_ID = "data.tenant_id"
+    """Tenant identifier."""
+
+    USER_TYPE = "data.user_type"
+    """User type, e.g. Account, EndUser."""
+
+    STREAMING = "data.streaming"
+    """Whether streaming response is enabled."""
+
+    WORKFLOW_ID = "data.workflow_id"
+    """Workflow identifier."""
+
+    INVOKE_FROM = "data.invoke_from"
+    """Invocation source, e.g. SERVICE_API, WEB_APP, DEBUGGER."""
+
+    INVOKED_BY = "data.invoked_by"
+    """Invoked by, e.g. end_user, account, user."""
+
+    USAGE_INPUT_TOKENS = "gen_ai.usage.input_tokens"
+    """Number of input tokens (prompt tokens) used."""
+
+    USAGE_OUTPUT_TOKENS = "gen_ai.usage.output_tokens"
+    """Number of output tokens (completion tokens) generated."""
+
+    USAGE_TOTAL_TOKENS = "gen_ai.usage.total_tokens"
+    """Total number of tokens used."""

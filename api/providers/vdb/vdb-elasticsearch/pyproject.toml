@@ -1,0 +1,15 @@
+[project]
+name = "data-vdb-elasticsearch"
+version = "0.0.1"
+
+dependencies = [
+    "elasticsearch==8.14.0",
+]
+description = "DATA vector store backend (data-vdb-elasticsearch)."
+
+[project.entry-points."data.vector_backends"]
+elasticsearch = "data_vdb_elasticsearch.elasticsearch_vector:ElasticSearchVectorFactory"
+elasticsearch-ja = "data_vdb_elasticsearch.elasticsearch_ja_vector:ElasticSearchJaVectorFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

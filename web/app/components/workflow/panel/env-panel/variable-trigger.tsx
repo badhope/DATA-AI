@@ -1,0 +1,64 @@
+'use client'
+import type { EnvironmentVariable } from '@/app/components/workflow/types'
+import { Button } from '@langgenius/data-ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@langgenius/data-ui/popover'
+import { RiAddLine } from '@remixicon/react'
+import * as React from 'react'
+import { useTranslation } from 'react-i18next'
+import VariableModal from '@/app/components/workflow/panel/env-panel/variable-modal'
+
+type Props = Readonly<{
+  open: boolean
+  setOpen: (value: React.SetStateAction<boolean>) => void
+  env?: EnvironmentVariable
+  onClose: () => void
+  onSave: (env: EnvironmentVariable) => void
+}>
+
+const VariableTrigger = ({
+  open,
+  setOpen,
+  env,
+  onClose,
+  onSave,
+}: Props) => {
+  const { t } = useTranslation()
+  const handleOpenChange = React.useCallback((nextOpen: boolean) => {
+    setOpen(nextOpen)
+    if (!nextOpen)
+      onClose()
+  }, [onClose, setOpen])
+
+  return (
+    <Popover
+      open={open}
+      onOpenChange={handleOpenChange}
+    >
+      <PopoverTrigger
+        render={(
+          <Button variant="primary">
+            <RiAddLine className="mr-1 size-4" />
+            <span className="system-sm-medium">{t('env.envPanelButton', { ns: 'workflow' })}</span>
+          </Button>
+        )}
+      />
+      <PopoverContent
+        placement="left-start"
+        sideOffset={8}
+        alignOffset={-104}
+        popupClassName="border-none bg-transparent shadow-none"
+      >
+        <VariableModal
+          env={env}
+          onSave={onSave}
+          onClose={() => {
+            onClose()
+            setOpen(false)
+          }}
+        />
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+export default VariableTrigger

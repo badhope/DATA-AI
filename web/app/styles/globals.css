@@ -1,0 +1,12 @@
+@import './tailwind-core.css';
+
+@source '../../app';
+@source '../../context';
+@source '../../hooks';
+@source '../../../packages/data-ui/src';
+@source '../../node_modules/streamdown/dist';
+@source '../../node_modules/@streamdown/math/dist';
+@source not '../../**/*.{spec,test}.{js,ts,jsx,tsx}';
+@source not '../../**/*.stories.{js,ts,jsx,tsx}';
+@source not '../../../packages/data-ui/src/**/*.{spec,test}.{ts,tsx}';
+@source not '../../../packages/data-ui/src/**/*.stories.{ts,tsx}';

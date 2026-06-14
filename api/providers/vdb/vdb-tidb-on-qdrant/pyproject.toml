@@ -1,0 +1,14 @@
+[project]
+name = "data-vdb-tidb-on-qdrant"
+version = "0.0.1"
+
+dependencies = [
+    "qdrant-client==1.9.0",
+]
+description = "DATA vector store backend (data-vdb-tidb-on-qdrant)."
+
+[project.entry-points."data.vector_backends"]
+tidb_on_qdrant = "data_vdb_tidb_on_qdrant.tidb_on_qdrant_vector:TidbOnQdrantVectorFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

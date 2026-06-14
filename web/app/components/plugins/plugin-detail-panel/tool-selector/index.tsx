@@ -1,0 +1,245 @@
+'use client'
+import type { OffsetOptions } from '@floating-ui/react'
+import type { Placement } from '@langgenius/data-ui/popover'
+import type { FC } from 'react'
+import type { Node } from 'reactflow'
+import type { ToolValue } from '@/app/components/workflow/block-selector/types'
+import type { NodeOutPutVar } from '@/app/components/workflow/types'
+import { cn } from '@langgenius/data-ui/cn'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@langgenius/data-ui/popover'
+import * as React from 'react'
+import { useTranslation } from 'react-i18next'
+import { CollectionType } from '@/app/components/tools/types'
+import Link from '@/next/link'
+import {
+  ToolAuthorizationSection,
+  ToolBaseForm,
+  ToolItem,
+  ToolSettingsPanel,
+  ToolTrigger,
+} from './components'
+import { useToolSelectorState } from './hooks/use-tool-selector-state'
+
+type Props = Readonly<{
+  disabled?: boolean
+  placement?: Placement
+  offset?: OffsetOptions
+  scope?: string
+  value?: ToolValue
+  selectedTools?: ToolValue[]
+  onSelect: (tool: ToolValue) => void
+  onSelectMultiple?: (tool: ToolValue[]) => void
+  isEdit?: boolean
+  onDelete?: () => void
+  supportEnableSwitch?: boolean
+  supportAddCustomTool?: boolean
+  trigger?: React.ReactNode
+  controlledState?: boolean
+  onControlledStateChange?: (state: boolean) => void
+  panelShowState?: boolean
+  onPanelShowStateChange?: (state: boolean) => void
+  nodeOutputVars: NodeOutPutVar[]
+  availableNodes: Node[]
+  nodeId?: string
+}>
+
+const ToolSelector: FC<Props> = ({
+  value,
+  selectedTools,
+  isEdit,
+  disabled,
+  placement = 'left',
+  offset = 4,
+  onSelect,
+  onSelectMultiple,
+  onDelete,
+  scope,
+  supportEnableSwitch,
+  trigger,
+  controlledState,
+  onControlledStateChange,
+  panelShowState,
+  onPanelShowStateChange,
+  nodeOutputVars,
+  availableNodes,
+  nodeId = '',
+}) => {
+  const { t } = useTranslation()
+  const sideOffset = typeof offset === 'number' ? offset : (typeof offset === 'function' ? 0 : (offset?.mainAxis ?? 0))
+  const alignOffset = typeof offset === 'number' ? 0 : (typeof offset === 'function' ? 0 : (offset?.crossAxis ?? 0))
+
+  // Use custom hook for state management
+  const state = useToolSelectorState({ value, onSelect, onSelectMultiple })
+  const {
+    isShow,
+    setIsShow,
+    isShowChooseTool,
+    setIsShowChooseTool,
+    currType,
+    setCurrType,
+    currentProvider,
+    currentTool,
+    settingsFormSchemas,
+    paramsFormSchemas,
+    showTabSlider,
+    userSettingsOnly,
+    reasoningConfigOnly,
+    manifestIcon,
+    inMarketPlace,
+    manifest,
+    handleSelectTool,
+    handleSelectMultipleTool,
+    handleDescriptionChange,
+    handleSettingsFormChange,
+    handleParamsFormChange,
+    handleEnabledChange,
+    handleAuthorizationItemClick,
+    handleInstall,
+    getSettingsValue,
+  } = state
+
+  // Determine portal open state based on controlled vs uncontrolled mode
+  const portalOpen = trigger ? controlledState : isShow
+  const onPortalOpenChange = trigger ? onControlledStateChange : setIsShow
+  const handlePortalOpenChange = (nextOpen: boolean) => {
+    if (nextOpen && (disabled || !currentProvider || !currentTool))
+      return
+    onPortalOpenChange?.(nextOpen)
+  }
+
+  // Build error tooltip content
+  const renderErrorTip = () => (
+    <div className="max-w-[240px] space-y-1 text-xs">
+      <h3 className="font-semibold text-text-primary">
+        {currentTool
+          ? t('detailPanel.toolSelector.uninstalledTitle', { ns: 'plugin' })
+          : t('detailPanel.toolSelector.unsupportedTitle', { ns: 'plugin' })}
+      </h3>
+      <p className="tracking-tight text-text-secondary">
+        {currentTool
+          ? t('detailPanel.toolSelector.uninstalledContent', { ns: 'plugin' })
+          : t('detailPanel.toolSelector.unsupportedContent', { ns: 'plugin' })}
+      </p>
+      <p>
+        <Link href="/plugins" className="tracking-tight text-text-accent">
+          {t('detailPanel.toolSelector.uninstalledLink', { ns: 'plugin' })}
+        </Link>
+      </p>
+    </div>
+  )
+
+  return (
+    <Popover
+      open={portalOpen}
+      onOpenChange={handlePortalOpenChange}
+    >
+      <PopoverTrigger
+        nativeButton={false}
+        render={<div className="w-full" />}
+      >
+        {trigger}
+
+        {/* Default trigger - no value */}
+        {!trigger && !value?.provider_name && (
+          <ToolTrigger
+            isConfigure
+            open={isShow}
+            value={value}
+            provider={currentProvider}
+          />
+        )}
+
+        {/* Default trigger - with value */}
+        {!trigger && value?.provider_name && (
+          <ToolItem
+            open={isShow}
+            icon={currentProvider?.icon || manifestIcon}
+            isMCPTool={currentProvider?.type === CollectionType.mcp}
+            providerName={value.provider_name}
+            providerShowName={value.provider_show_name}
+            toolLabel={value.tool_label || value.tool_name}
+            showSwitch={supportEnableSwitch}
+            switchValue={value.enabled}
+            onSwitchChange={handleEnabledChange}
+            onDelete={onDelete}
+            noAuth={currentProvider && currentTool && !currentProvider.is_team_authorization}
+            uninstalled={!currentProvider && inMarketPlace}
+            versionMismatch={currentProvider && inMarketPlace && !currentTool}
+            installInfo={manifest?.latest_package_identifier}
+            onInstall={handleInstall}
+            isError={(!currentProvider || !currentTool) && !inMarketPlace}
+            errorTip={renderErrorTip()}
+          />
+        )}
+      </PopoverTrigger>
+
+      <PopoverContent
+        placement={placement}
+        sideOffset={sideOffset}
+        alignOffset={alignOffset}
+        popupClassName="border-none bg-transparent shadow-none"
+      >
+        <div className={cn(
+          'relative max-h-[642px] min-h-20 w-[361px] rounded-xl',
+          'border-[0.5px] border-components-panel-border bg-components-panel-bg-blur',
+          'overflow-y-auto pb-2 pb-4 shadow-lg backdrop-blur-xs',
+        )}
+        >
+          {/* Header */}
+          <div className="px-4 pt-3.5 pb-1 system-xl-semibold text-text-primary">
+            {t(`detailPanel.toolSelector.${isEdit ? 'toolSetting' : 'title'}`, { ns: 'plugin' })}
+          </div>
+
+          {/* Base form: tool picker + description */}
+          <ToolBaseForm
+            value={value}
+            currentProvider={currentProvider}
+            offset={offset}
+            scope={scope}
+            selectedTools={selectedTools}
+            isShowChooseTool={isShowChooseTool}
+            panelShowState={panelShowState}
+            hasTrigger={!!trigger}
+            onShowChange={setIsShowChooseTool}
+            onPanelShowStateChange={onPanelShowStateChange}
+            onSelectTool={handleSelectTool}
+            onSelectMultipleTool={handleSelectMultipleTool}
+            onDescriptionChange={handleDescriptionChange}
+          />
+
+          {/* Authorization section */}
+          <ToolAuthorizationSection
+            currentProvider={currentProvider}
+            credentialId={value?.credential_id}
+            onAuthorizationItemClick={handleAuthorizationItemClick}
+          />
+
+          {/* Settings panel */}
+          <ToolSettingsPanel
+            value={value}
+            currentProvider={currentProvider}
+            nodeId={nodeId}
+            currType={currType}
+            settingsFormSchemas={settingsFormSchemas}
+            paramsFormSchemas={paramsFormSchemas}
+            settingsValue={getSettingsValue()}
+            showTabSlider={showTabSlider}
+            userSettingsOnly={userSettingsOnly}
+            reasoningConfigOnly={reasoningConfigOnly}
+            nodeOutputVars={nodeOutputVars}
+            availableNodes={availableNodes}
+            onCurrTypeChange={setCurrType}
+            onSettingsFormChange={handleSettingsFormChange}
+            onParamsFormChange={handleParamsFormChange}
+          />
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+export default React.memo(ToolSelector)

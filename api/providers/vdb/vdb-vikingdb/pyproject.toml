@@ -1,0 +1,14 @@
+[project]
+name = "data-vdb-vikingdb"
+version = "0.0.1"
+
+dependencies = [
+    "volcengine-compat~=1.0.0",
+]
+description = "DATA vector store backend (data-vdb-vikingdb)."
+
+[project.entry-points."data.vector_backends"]
+vikingdb = "data_vdb_vikingdb.vikingdb_vector:VikingDBVectorFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

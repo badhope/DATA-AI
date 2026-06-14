@@ -1,0 +1,14 @@
+[project]
+name = "data-vdb-iris"
+version = "0.0.1"
+
+dependencies = [
+    "intersystems-irispython>=5.1.0,<6.0.0",
+]
+description = "DATA vector store backend (data-vdb-iris)."
+
+[project.entry-points."data.vector_backends"]
+iris = "data_vdb_iris.iris_vector:IrisVectorFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

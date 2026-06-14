@@ -1,0 +1,14 @@
+[project]
+name = "data-vdb-huawei-cloud"
+version = "0.0.1"
+
+dependencies = [
+    "elasticsearch==8.14.0",
+]
+description = "DATA vector store backend (data-vdb-huawei-cloud)."
+
+[project.entry-points."data.vector_backends"]
+huawei_cloud = "data_vdb_huawei_cloud.huawei_cloud_vector:HuaweiCloudVectorFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,46 @@
+'use client'
+import type { FC } from 'react'
+import type { MetadataItemWithEdit } from '../types'
+import { cn } from '@langgenius/data-ui/cn'
+import { RiIndeterminateCircleLine } from '@remixicon/react'
+import * as React from 'react'
+import InputCombined from './input-combined'
+import Label from './label'
+
+type Props = Readonly<{
+  className?: string
+  payload: MetadataItemWithEdit
+  onChange: (value: MetadataItemWithEdit) => void
+  onRemove: () => void
+}>
+
+const AddRow: FC<Props> = ({
+  className,
+  payload,
+  onChange,
+  onRemove,
+}) => {
+  return (
+    <div className={cn('flex h-6 items-center space-x-0.5', className)}>
+      <Label text={payload.name} />
+      <InputCombined
+        label={payload.name}
+        type={payload.type}
+        value={payload.value}
+        onChange={value => onChange({ ...payload, value })}
+      />
+      <div
+        className={
+          cn(
+            'cursor-pointer rounded-md p-1 text-text-tertiary hover:bg-state-destructive-hover hover:text-text-destructive',
+          )
+        }
+        onClick={onRemove}
+      >
+        <RiIndeterminateCircleLine className="size-4" />
+      </div>
+    </div>
+  )
+}
+
+export default React.memo(AddRow)

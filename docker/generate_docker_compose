@@ -1,0 +1,160 @@
+#!/usr/bin/env python3
+import os
+import re
+import sys
+
+# Variables that exist only for Docker Compose orchestration and must NOT be
+# injected into containers as environment variables.
+SHARED_ENV_EXCLUDE = frozenset(
+    [
+        # Docker Compose profile selection
+        "COMPOSE_PROFILES",
+        # Worker health check orchestration flags (consumed by docker-compose,
+        # not by the application running inside the container)
+        "COMPOSE_WORKER_HEALTHCHECK_DISABLED",
+        "COMPOSE_WORKER_HEALTHCHECK_INTERVAL",
+        "COMPOSE_WORKER_HEALTHCHECK_TIMEOUT",
+    ]
+)
+
+
+def parse_env_example(file_path):
+    """
+    Parses the .env.example file and returns a dictionary with variable names as keys and default values as values.
+    """
+    env_vars = {}
+    with open(file_path, "r", encoding="utf-8") as f:
+        for line_number, line in enumerate(f, 1):
+            line = line.strip()
+            # Ignore empty lines and comments
+            if not line or line.startswith("#"):
+                continue
+            # Use regex to parse KEY=VALUE
+            match = re.match(r"^([^=]+)=(.*)$", line)
+            if match:
+                key = match.group(1).strip()
+                value = match.group(2).strip()
+                # Remove possible quotes around the value
+                if (value.startswith('"') and value.endswith('"')) or (
+                    value.startswith("'") and value.endswith("'")
+                ):
+                    value = value[1:-1]
+                env_vars[key] = value
+            else:
+                print(f"Warning: Unable to parse line {line_number}: {line}")
+    return env_vars
+
+
+def generate_shared_env_block(env_vars, anchor_name="shared-api-worker-env"):
+    """
+    Generates a shared environment variables block as a YAML string.
+    """
+    lines = [f"x-shared-env: &{anchor_name}"]
+    for key, default in env_vars.items():
+        if key in SHARED_ENV_EXCLUDE:
+            continue
+        # If default value is empty, use ${KEY:-}
+        if default == "":
+            lines.append(f"  {key}: ${{{key}:-}}")
+        else:
+            # If default value contains special characters, wrap it in quotes
+            if re.search(r"[:\s]", default):
+                default = f"{default}"
+            lines.append(f"  {key}: ${{{key}:-{default}}}")
+    return "\n".join(lines)
+
+
+def create_env_files_from_example(env_example_path):
+    """
+    Creates actual env files from .env.example by copying the categorized .env.example files.
+    This allows docker-compose to use env_file references.
+    Supports per-module structure with subdirectories.
+    """
+    base_dir = os.path.dirname(os.path.abspath(env_example_path))
+    root_env_file = os.path.join(base_dir, ".env")
+    if not os.path.exists(root_env_file):
+        with open(env_example_path, "r", encoding="utf-8") as src, open(
+            root_env_file, "w", encoding="utf-8", newline="\n"
+        ) as dst:
+            dst.write(src.read())
+        print(f"Created {root_env_file}")
+    else:
+        print(f"{root_env_file} already exists, skipping")
+
+    envs_dir = os.path.join(base_dir, "envs")
+    if not os.path.isdir(envs_dir):
+        print(f"No envs directory found at {envs_dir}, skipping split env files")
+        return []
+
+    created_files = []
+    # Walk through all .env.example files in subdirectories
+    for root, dirs, files in os.walk(envs_dir):
+        for file in files:
+            if file.endswith('.env.example'):
+                example_file = os.path.join(root, file)
+                env_file = example_file.replace('.env.example', '.env')
+
+                if os.path.exists(env_file):
+                    print(f"{env_file} already exists, skipping")
+                    continue
+
+                # Copy .example to actual file
+                with open(example_file, "r", encoding="utf-8") as src, open(
+                    env_file, "w", encoding="utf-8", newline="\n"
+                ) as dst:
+                    dst.write(src.read())
+                created_files.append(env_file)
+                print(f"Created {env_file}")
+    
+    return created_files
+
+
+def insert_shared_env(template_path, output_path, header_comments):
+    """
+    Copies the template file to output path with header comments.
+    The template now uses env_file references instead of a huge YAML anchor.
+    """
+    with open(template_path, "r", encoding="utf-8") as f:
+        template_content = f.read()
+
+    # Prepare the final content with header comments
+    final_content = f"{header_comments}\n{template_content}"
+
+    with open(output_path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(final_content)
+    print(f"Generated {output_path}")
+
+
+def main():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    env_example_path = os.path.join(base_dir, ".env.example")
+    template_path = os.path.join(base_dir, "docker-compose-template.yaml")
+    output_path = os.path.join(base_dir, "docker-compose.yaml")
+
+    # Define header comments to be added at the top of docker-compose.yaml
+    header_comments = (
+        "# ==================================================================\n"
+        "# WARNING: This file is auto-generated by generate_docker_compose\n"
+        "# Do not modify this file directly. Instead, update the .env.example\n"
+        "# or docker-compose-template.yaml and regenerate this file.\n"
+        "# ==================================================================\n"
+    )
+
+    # Check if required files exist
+    for path in [env_example_path, template_path]:
+        if not os.path.isfile(path):
+            print(f"Error: File {path} does not exist.")
+            sys.exit(1)
+
+    # Create env files from categorized .env.example files
+    # These files are used by docker-compose's env_file directive
+    # This ensures .env files exist even in CI/CD environments
+    create_env_files_from_example(env_example_path)
+
+    # Copy template to output with header comments
+    # The template now uses env_file references instead of a huge YAML anchor
+    insert_shared_env(template_path, output_path, header_comments)
+
+
+if __name__ == "__main__":
+    main()

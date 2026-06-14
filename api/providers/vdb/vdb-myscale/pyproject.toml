@@ -1,0 +1,14 @@
+[project]
+name = "data-vdb-myscale"
+version = "0.0.1"
+
+dependencies = [
+    "clickhouse-connect==0.15.1",
+]
+description = "DATA vector store backend (data-vdb-myscale)."
+
+[project.entry-points."data.vector_backends"]
+myscale = "data_vdb_myscale.myscale_vector:MyScaleVectorFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

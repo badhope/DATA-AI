@@ -1,0 +1,15 @@
+[project]
+name = "data-vdb-lindorm"
+version = "0.0.1"
+
+dependencies = [
+    "opensearch-py==3.1.0",
+    "tenacity>=8.0.0,<9.0.0",
+]
+description = "DATA vector store backend (data-vdb-lindorm)."
+
+[project.entry-points."data.vector_backends"]
+lindorm = "data_vdb_lindorm.lindorm_vector:LindormVectorStoreFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

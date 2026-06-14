@@ -1,0 +1,14 @@
+[project]
+name = "data-vdb-milvus"
+version = "0.0.1"
+
+dependencies = [
+    "pymilvus~=2.6.12",
+]
+description = "DATA vector store backend (data-vdb-milvus)."
+
+[project.entry-points."data.vector_backends"]
+milvus = "data_vdb_milvus.milvus_vector:MilvusVectorFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

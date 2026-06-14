@@ -1,0 +1,14 @@
+[project]
+name = "data-vdb-clickzetta"
+version = "0.0.1"
+
+dependencies = [
+    "clickzetta-connector-python==0.8.104",
+]
+description = "DATA vector store backend (data-vdb-clickzetta)."
+
+[project.entry-points."data.vector_backends"]
+clickzetta = "data_vdb_clickzetta.clickzetta_vector:ClickzettaVectorFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

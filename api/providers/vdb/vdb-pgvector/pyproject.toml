@@ -1,0 +1,14 @@
+[project]
+name = "data-vdb-pgvector"
+version = "0.0.1"
+
+dependencies = [
+    "pgvector==0.4.2",
+]
+description = "DATA vector store backend (data-vdb-pgvector)."
+
+[project.entry-points."data.vector_backends"]
+pgvector = "data_vdb_pgvector.pgvector:PGVectorFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]

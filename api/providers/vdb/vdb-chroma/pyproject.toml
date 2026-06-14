@@ -1,0 +1,13 @@
+[project]
+name = "data-vdb-chroma"
+version = "0.0.1"
+dependencies = [
+    "chromadb==0.5.20",
+]
+description = "DATA vector store backend (data-vdb-chroma)."
+
+[project.entry-points."data.vector_backends"]
+chroma = "data_vdb_chroma.chroma_vector:ChromaVectorFactory"
+
+[tool.setuptools.packages.find]
+where = ["src"]
