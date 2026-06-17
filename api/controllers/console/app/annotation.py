@@ -25,7 +25,7 @@ from fields.annotation_fields import (
     AnnotationList,
 )
 from fields.base import ResponseModel
-from libs.helper import uuid_value
+from libs.helper import dump_response, uuid_value
 from libs.login import login_required
 from services.annotation_service import (
     AppAnnotationService,
@@ -273,7 +273,7 @@ class AnnotationApi(Resource):
             total=total,
             page=page,
         )
-        return response.model_dump(mode="json"), 200
+        return dump_response(AnnotationList, response), 200
 
     @console_ns.doc("create_annotation")
     @console_ns.doc(description="Create a new annotation for an app")
@@ -508,4 +508,4 @@ class AnnotationHitHistoryListApi(Resource):
             total=total,
             page=page,
         )
-        return response.model_dump(mode="json")
+        return dump_response(AnnotationHitHistoryList, response)

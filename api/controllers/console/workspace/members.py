@@ -31,7 +31,7 @@ from extensions.ext_database import db
 from extensions.ext_redis import redis_client
 from fields.base import ResponseModel
 from fields.member_fields import AccountWithRole, AccountWithRoleList
-from libs.helper import extract_remote_ip
+from libs.helper import dump_response, extract_remote_ip
 from libs.login import login_required
 from models.account import Account, TenantAccountJoin, TenantAccountRole
 from services.account_service import AccountService, RegisterService, TenantService
@@ -170,7 +170,7 @@ class MemberListApi(Resource):
         members = TenantService.get_tenant_members(current_user.current_tenant)
         member_models = TypeAdapter(list[AccountWithRole]).validate_python(members, from_attributes=True)
         response = AccountWithRoleList(accounts=member_models)
-        return response.model_dump(mode="json"), 200
+        return dump_response(AccountWithRoleList, response), 200
 
 
 @console_ns.route("/workspaces/current/members/invite-email")
@@ -334,7 +334,7 @@ class DatasetOperatorMemberListApi(Resource):
         members = TenantService.get_dataset_operator_members(current_user.current_tenant)
         member_models = TypeAdapter(list[AccountWithRole]).validate_python(members, from_attributes=True)
         response = AccountWithRoleList(accounts=member_models)
-        return response.model_dump(mode="json"), 200
+        return dump_response(AccountWithRoleList, response), 200
 
 
 @console_ns.route("/workspaces/current/members/send-owner-transfer-confirm-email")
