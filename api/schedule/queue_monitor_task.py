@@ -10,12 +10,12 @@ from configs import data_config
 from extensions.ext_database import db
 from libs.email_i18n import EmailType, get_email_i18n_service
 
-redis_config = parse_url(data_config.CELERY_BROKER_URL)
+redis_config = parse_url(data_config.CELERY_BROKER_URL)  # type: ignore
 celery_redis = Redis(
     host=str(redis_config.get("hostname") or "localhost"),
     port=int(redis_config.get("port") or 6379),
     password=str(pwd) if (pwd := redis_config.get("password")) is not None else None,
-    db=int(redis_config.get("virtual_host")) if redis_config.get("virtual_host") else 1,
+    db=int(redis_config.get("virtual_host")) if redis_config.get("virtual_host") else 1,  # type: ignore
     ssl=data_config.BROKER_USE_SSL,
     ssl_ca_certs=data_config.REDIS_SSL_CA_CERTS if data_config.BROKER_USE_SSL else None,
     ssl_cert_reqs=getattr(data_config, "REDIS_SSL_CERT_REQS", None) if data_config.BROKER_USE_SSL else None,
