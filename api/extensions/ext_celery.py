@@ -257,4 +257,4 @@ def init_app(app: DATAApp) -> Celery:
         imports.append("tasks.enterprise_telemetry_task")
     celery_app.conf.update(beat_schedule=beat_schedule, imports=imports)
 
-    return celery_app
+    return celery_app  # type: ignore

@@ -136,7 +136,7 @@ class ExcelExtractor(BaseExtractor):
         elif file_extension == ".xls":
             excel_file = pd.ExcelFile(self._file_path, engine="xlrd")
             for excel_sheet_name in excel_file.sheet_names:
-                df = excel_file.parse(sheet_name=excel_sheet_name)
+                df = excel_file.parse(sheet_name=excel_sheet_name)  # type: ignore
                 df.dropna(how="all", inplace=True)
 
                 for _, series_row in df.iterrows():
