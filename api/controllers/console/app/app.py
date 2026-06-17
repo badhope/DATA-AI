@@ -41,7 +41,7 @@ from core.trigger.constants import TRIGGER_NODE_TYPES
 from extensions.ext_database import db
 from fields.base import ResponseModel
 from graphon.enums import WorkflowExecutionStatus
-from libs.helper import build_icon_url, to_timestamp
+from libs.helper import build_icon_url, dump_response, to_timestamp
 from libs.login import login_required
 from models import Account, App, DatasetPermissionEnum, Workflow
 from models.model import IconType
@@ -532,7 +532,7 @@ class AppListApi(Resource):
         app_pagination = app_service.get_paginate_apps(current_user_id, current_tenant_id, params)
         if not app_pagination:
             empty = AppPagination(page=args.page, limit=args.limit, total=0, has_more=False, data=[])
-            return empty.model_dump(mode="json"), 200
+            return dump_response(AppPagination, empty), 200
 
         if FeatureService.get_system_features().webapp_auth.enabled:
             app_ids = [str(app.id) for app in app_pagination.items]
@@ -575,8 +575,7 @@ class AppListApi(Resource):
         for app in app_pagination.items:
             app.has_draft_trigger = str(app.id) in draft_trigger_app_ids
 
-        pagination_model = AppPagination.model_validate(app_pagination, from_attributes=True)
-        return pagination_model.model_dump(mode="json"), 200
+        return dump_response(AppPagination, app_pagination), 200
 
     @console_ns.doc("create_app")
     @console_ns.doc(description="Create a new application")
@@ -605,8 +604,7 @@ class AppListApi(Resource):
 
         app_service = AppService()
         app = app_service.create_app(current_tenant_id, params, current_user)
-        app_detail = AppDetail.model_validate(app, from_attributes=True)
-        return app_detail.model_dump(mode="json"), 201
+        return dump_response(AppDetail, app), 201
 
 
 @console_ns.route("/apps/<uuid:app_id>")
@@ -630,8 +628,7 @@ class AppApi(Resource):
             app_setting = EnterpriseService.WebAppAuth.get_app_access_mode_by_id(app_id=str(app_model.id))
             app_model.access_mode = app_setting.access_mode  # type: ignore[attr-defined]
 
-        response_model = AppDetailWithSite.model_validate(app_model, from_attributes=True)
-        return response_model.model_dump(mode="json")
+        return dump_response(AppDetailWithSite, app_model)
 
     @console_ns.doc("update_app")
     @console_ns.doc(description="Update application details")
@@ -661,8 +658,7 @@ class AppApi(Resource):
             "max_active_requests": args.max_active_requests or 0,
         }
         app_model = app_service.update_app(app_model, args_dict)
-        response_model = AppDetailWithSite.model_validate(app_model, from_attributes=True)
-        return response_model.model_dump(mode="json")
+        return dump_response(AppDetailWithSite, app_model)
 
     @console_ns.doc("delete_app")
     @console_ns.doc(description="Delete application")
@@ -766,7 +762,7 @@ class AppExportApi(Resource):
                 workflow_id=args.workflow_id,
             )
         )
-        return payload.model_dump(mode="json")
+        return dump_response(AppExportResponse, payload)
 
 
 @console_ns.route("/apps/<uuid:app_id>/publish-to-creators-platform")
@@ -812,8 +808,7 @@ class AppNameApi(Resource):
 
         app_service = AppService()
         app_model = app_service.update_app_name(app_model, args.name)
-        response_model = AppDetail.model_validate(app_model, from_attributes=True)
-        return response_model.model_dump(mode="json")
+        return dump_response(AppDetail, app_model)
 
 
 @console_ns.route("/apps/<uuid:app_id>/icon")
@@ -839,8 +834,7 @@ class AppIconApi(Resource):
             args.icon_background or "",
             args.icon_type,
         )
-        response_model = AppDetail.model_validate(app_model, from_attributes=True)
-        return response_model.model_dump(mode="json")
+        return dump_response(AppDetail, app_model)
 
 
 @console_ns.route("/apps/<uuid:app_id>/site-enable")
@@ -861,8 +855,7 @@ class AppSiteStatus(Resource):
 
         app_service = AppService()
         app_model = app_service.update_app_site_status(app_model, args.enable_site)
-        response_model = AppDetail.model_validate(app_model, from_attributes=True)
-        return response_model.model_dump(mode="json")
+        return dump_response(AppDetail, app_model)
 
 
 @console_ns.route("/apps/<uuid:app_id>/api-enable")
@@ -883,8 +876,7 @@ class AppApiStatus(Resource):
 
         app_service = AppService()
         app_model = app_service.update_app_api_status(app_model, args.enable_api)
-        response_model = AppDetail.model_validate(app_model, from_attributes=True)
-        return response_model.model_dump(mode="json")
+        return dump_response(AppDetail, app_model)
 
 
 @console_ns.route("/apps/<uuid:app_id>/trace")

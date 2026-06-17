@@ -23,7 +23,7 @@ from controllers.web.error import WebFormRateLimitExceededError
 from controllers.web.site import serialize_app_site_payload
 from extensions.ext_database import db
 from graphon.nodes.human_input.entities import FormInputConfig
-from libs.helper import RateLimiter, extract_remote_ip, to_timestamp
+from libs.helper import RateLimiter, dump_response, extract_remote_ip, to_timestamp
 from models.account import TenantStatus
 from models.model import App, Site
 from repositories.factory import DATAAPIRepositoryFactory
@@ -140,7 +140,7 @@ class HumanInputFormUploadTokenApi(Resource):
             upload_token=token.upload_token,
             expires_at=to_timestamp(token.expires_at),
         )
-        return response.model_dump(mode="json"), 200
+        return dump_response(HumanInputUploadTokenResponse, response), 200
 
 
 @web_ns.route("/form/human_input/<string:form_token>")

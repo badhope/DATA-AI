@@ -479,4 +479,4 @@ class WorkflowCommentMentionUsersApi(Resource):
         members = TenantService.get_tenant_members(current_tenant)
         users = TypeAdapter(list[AccountWithRole]).validate_python(members, from_attributes=True)
         response = WorkflowCommentMentionUsersPayload(users=users)
-        return response.model_dump(mode="json"), 200
+        return dump_response(WorkflowCommentMentionUsersPayload, response), 200

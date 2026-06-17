@@ -13,6 +13,7 @@ from controllers.service_api.wraps import validate_app_token
 from extensions.ext_redis import redis_client
 from fields.annotation_fields import Annotation, AnnotationList
 from fields.base import ResponseModel
+from libs.helper import dump_response
 from models.model import App
 from services.annotation_service import (
     AppAnnotationService,
@@ -157,7 +158,7 @@ class AnnotationListApi(Resource):
             total=total,
             page=query.page,
         )
-        return response.model_dump(mode="json")
+        return dump_response(AnnotationList, response)
 
     @service_api_ns.expect(service_api_ns.models[AnnotationCreatePayload.__name__])
     @service_api_ns.doc("create_annotation")
@@ -179,8 +180,7 @@ class AnnotationListApi(Resource):
         payload = AnnotationCreatePayload.model_validate(service_api_ns.payload or {})
         insert_args: InsertAnnotationArgs = {"question": payload.question, "answer": payload.answer}
         annotation = AppAnnotationService.insert_app_annotation_directly(insert_args, app_model.id)
-        response = Annotation.model_validate(annotation, from_attributes=True)
-        return response.model_dump(mode="json"), HTTPStatus.CREATED
+        return dump_response(Annotation, annotation), HTTPStatus.CREATED
 
 
 @service_api_ns.route("/apps/annotations/<uuid:annotation_id>")
@@ -209,8 +209,7 @@ class AnnotationUpdateDeleteApi(Resource):
         payload = AnnotationCreatePayload.model_validate(service_api_ns.payload or {})
         update_args: UpdateAnnotationArgs = {"question": payload.question, "answer": payload.answer}
         annotation = AppAnnotationService.update_app_annotation_directly(update_args, app_model.id, str(annotation_id))
-        response = Annotation.model_validate(annotation, from_attributes=True)
-        return response.model_dump(mode="json")
+        return dump_response(Annotation, annotation)
 
     @service_api_ns.doc("delete_annotation")
     @service_api_ns.doc(description="Delete an annotation")

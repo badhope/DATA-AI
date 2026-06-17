@@ -13,6 +13,7 @@ from core.file import remote_fetcher
 from extensions.ext_database import db
 from fields.file_fields import FileWithSignedUrl, RemoteFileInfo
 from graphon.file import helpers as file_helpers
+from libs.helper import dump_response
 from models.model import App, EndUser
 from services.file_service import FileService
 
@@ -69,7 +70,7 @@ class RemoteFileInfoApi(WebApiResource):
             file_type=resp.headers.get("Content-Type", "application/octet-stream"),
             file_length=int(resp.headers.get("Content-Length", -1)),
         )
-        return info.model_dump(mode="json")
+        return dump_response(RemoteFileInfo, info)
 
 
 @web_ns.route("/remote-files/upload")
@@ -151,4 +152,4 @@ class RemoteFileUploadApi(WebApiResource):
             created_by=upload_file.created_by,
             created_at=int(upload_file.created_at.timestamp()),
         )
-        return payload1.model_dump(mode="json"), 201
+        return dump_response(FileWithSignedUrl, payload1), 201

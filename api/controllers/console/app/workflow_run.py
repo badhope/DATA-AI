@@ -34,7 +34,7 @@ from graphon.entities.pause_reason import HumanInputRequired
 from graphon.enums import WorkflowExecutionStatus
 from libs.archive_storage import ArchiveStorageNotConfiguredError, get_archive_storage
 from libs.custom_inputs import time_duration
-from libs.helper import uuid_value
+from libs.helper import dump_response, uuid_value
 from libs.login import login_required
 from models import Account, App, AppMode, WorkflowArchiveLog, WorkflowRunTriggeredFrom
 from models.workflow import WorkflowRun
@@ -227,14 +227,14 @@ class WorkflowRunExportApi(Resource):
             expires_in=EXPORT_SIGNED_URL_EXPIRE_SECONDS,
         )
         expires_at = datetime.now(UTC) + timedelta(seconds=EXPORT_SIGNED_URL_EXPIRE_SECONDS)
-        response = WorkflowRunExportResponse.model_validate(
+        return dump_response(
+            WorkflowRunExportResponse,
             {
                 "status": "success",
                 "presigned_url": presigned_url,
                 "presigned_url_expires_at": expires_at.isoformat(),
-            }
-        )
-        return response.model_dump(mode="json"), 200
+            },
+        ), 200
 
 
 @console_ns.route("/apps/<uuid:app_id>/advanced-chat/workflow-runs/count")
@@ -462,7 +462,7 @@ class ConsoleWorkflowPauseDetailsApi(Resource):
         is_paused = workflow_run.status == WorkflowExecutionStatus.PAUSED
         if not is_paused:
             empty_response = WorkflowPauseDetailsResponse(paused_at=None, paused_nodes=[])
-            return empty_response.model_dump(mode="json"), 200
+            return dump_response(WorkflowPauseDetailsResponse, empty_response), 200
 
         pause_entity = workflow_run_repo.get_workflow_pause(workflow_run_id)
         pause_reasons = pause_entity.get_pause_reasons() if pause_entity else []
@@ -494,4 +494,4 @@ class ConsoleWorkflowPauseDetailsApi(Resource):
             paused_at=paused_at.isoformat() + "Z" if paused_at else None,
             paused_nodes=paused_nodes,
         )
-        return response.model_dump(mode="json"), 200
+        return dump_response(WorkflowPauseDetailsResponse, response), 200

@@ -27,6 +27,7 @@ from controllers.console.wraps import (
 )
 from extensions.ext_database import db
 from fields.file_fields import FileResponse, UploadConfig
+from libs.helper import dump_response
 from libs.login import login_required
 from models import Account
 from services.file_service import FileService
@@ -58,7 +59,7 @@ class FileApi(Resource):
             single_chunk_attachment_limit=data_config.SINGLE_CHUNK_ATTACHMENT_LIMIT,
             attachment_image_file_size_limit=data_config.ATTACHMENT_IMAGE_FILE_SIZE_LIMIT,
         )
-        return config.model_dump(mode="json"), 200
+        return dump_response(UploadConfig, config), 200
 
     @setup_required
     @login_required
@@ -100,8 +101,7 @@ class FileApi(Resource):
         except services.errors.file.BlockedFileExtensionError as blocked_extension_error:
             raise BlockedFileExtensionError(blocked_extension_error.description)
 
-        response = FileResponse.model_validate(upload_file, from_attributes=True)
-        return response.model_dump(mode="json"), 201
+        return dump_response(FileResponse, upload_file), 201
 
 
 @console_ns.route("/files/<uuid:file_id>/preview")

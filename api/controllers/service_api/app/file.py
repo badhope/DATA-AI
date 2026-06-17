@@ -15,6 +15,7 @@ from controllers.service_api import service_api_ns
 from controllers.service_api.wraps import FetchUserArg, WhereisUserArg, validate_app_token
 from extensions.ext_database import db
 from fields.file_fields import FileResponse
+from libs.helper import dump_response
 from models import App, EndUser
 from services.file_service import FileService
 
@@ -67,5 +68,4 @@ class FileApi(Resource):
         except services.errors.file.UnsupportedFileTypeError:
             raise UnsupportedFileTypeError()
 
-        response = FileResponse.model_validate(upload_file, from_attributes=True)
-        return response.model_dump(mode="json"), 201
+        return dump_response(FileResponse, upload_file), 201
